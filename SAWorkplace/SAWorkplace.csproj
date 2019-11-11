@@ -1,0 +1,83 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="SAWorkplace.deps.json" />
+    <Content Remove="SAWorkplace.runtimeconfig.json" />
+    <Content Remove="web.config" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Data\SAWorkplace.db" />
+    <None Remove="Data\SAWorkplace.db.sqbpro" />
+    <None Remove="dotnet-aspnet-codegenerator-design.dll" />
+    <None Remove="IdentityModel.dll" />
+    <None Remove="Microsoft.CodeAnalysis.CSharp.Workspaces.dll" />
+    <None Remove="Microsoft.CodeAnalysis.Workspaces.dll" />
+    <None Remove="Microsoft.Data.Sqlite.dll" />
+    <None Remove="Microsoft.EntityFrameworkCore.Abstractions.dll" />
+    <None Remove="Microsoft.EntityFrameworkCore.dll" />
+    <None Remove="Microsoft.EntityFrameworkCore.Relational.dll" />
+    <None Remove="Microsoft.EntityFrameworkCore.Sqlite.dll" />
+    <None Remove="Microsoft.VisualStudio.Web.CodeGeneration.Contracts.dll" />
+    <None Remove="Microsoft.VisualStudio.Web.CodeGeneration.Core.dll" />
+    <None Remove="Microsoft.VisualStudio.Web.CodeGeneration.dll" />
+    <None Remove="Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore.dll" />
+    <None Remove="Microsoft.VisualStudio.Web.CodeGeneration.Templating.dll" />
+    <None Remove="Microsoft.VisualStudio.Web.CodeGeneration.Utils.dll" />
+    <None Remove="Microsoft.VisualStudio.Web.CodeGenerators.Mvc.dll" />
+    <None Remove="Novell.Directory.Ldap.NETStandard.dll" />
+    <None Remove="NuGet.Frameworks.dll" />
+    <None Remove="Remotion.Linq.dll" />
+    <None Remove="SAWorkplace.dll" />
+    <None Remove="SAWorkplace.pdb" />
+    <None Remove="SAWorkplace.Views.dll" />
+    <None Remove="SAWorkplace.Views.pdb" />
+    <None Remove="SQLitePCLRaw.batteries_green.dll" />
+    <None Remove="SQLitePCLRaw.batteries_v2.dll" />
+    <None Remove="SQLitePCLRaw.core.dll" />
+    <None Remove="SQLitePCLRaw.provider.e_sqlite3.dll" />
+    <None Remove="System.Composition.AttributedModel.dll" />
+    <None Remove="System.Composition.Convention.dll" />
+    <None Remove="System.Composition.Hosting.dll" />
+    <None Remove="System.Composition.Runtime.dll" />
+    <None Remove="System.Composition.TypedParts.dll" />
+    <None Remove="System.Configuration.ConfigurationManager.dll" />
+    <None Remove="System.Data.SQLite.dll" />
+    <None Remove="System.DirectoryServices.AccountManagement.dll" />
+    <None Remove="System.DirectoryServices.dll" />
+    <None Remove="System.DirectoryServices.Protocols.dll" />
+    <None Remove="System.Interactive.Async.dll" />
+    <None Remove="System.IO.FileSystem.AccessControl.dll" />
+    <None Remove="System.Security.AccessControl.dll" />
+    <None Remove="System.Security.Cryptography.ProtectedData.dll" />
+    <None Remove="System.Security.Permissions.dll" />
+    <None Remove="System.Security.Principal.Windows.dll" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="IdentityModel" Version="4.0.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.8.1" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.6" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.4" />
+    <PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="2.3.8" />
+    <PackageReference Include="Novell.Directory.Ldap.NETStandard2_0" Version="3.1.0" />
+    <PackageReference Include="popper.js" Version="1.14.3" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.111" />
+    <PackageReference Include="System.DirectoryServices" Version="4.6.0" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.6.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services" />
+  </ItemGroup>
+
+</Project>
