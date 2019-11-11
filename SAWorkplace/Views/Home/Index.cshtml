@@ -1,0 +1,124 @@
+﻿@using Microsoft.AspNetCore.Http;
+
+<script type="text/javascript">
+    $(function () {
+        $(".filters").click(function () {
+            var filterType = $(this).attr("id");
+            var formData = new FormData();
+            formData.append("filterType", filterType);
+            var action = '@(Url.Action("Requests", "Home"))';
+
+            $.ajax({
+                url: action,
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'text',
+                error: function (data) {
+
+                },
+                success: function (data) {
+                    $("#requestContainer").html(data);
+                    var heading = filterType + ' Requests'
+                    $("#h2Request").html(heading);
+                }
+            });
+        });
+    });
+
+
+
+    //$(document).ajaxSend(function() {
+    //    $('#myLoadingModal').modal('show');
+    //}).ajaxComplete(function() {
+    //    $('#myLoadingModal').modal('hide');
+    //});
+
+    $(document).ready(function () {
+        $("#frmSearch").submit(function () {
+            var searchText = $('#txtSearch').val();
+            var formData = new FormData();
+            formData.append("searchText", searchText);
+            var action = '@(Url.Action("SearchRequests", "Home"))';
+            $('#txtSearch').attr("aria-invalid", "false");
+
+            $.ajax({
+            url: action,
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'text',
+            error: function (data) {
+
+            },
+            success: function (data) {
+            $("#requestContainer").html(data);
+            var heading = 'Your Request'
+            $("#h2Request").html(heading);
+            $('#txtSearch').val('');
+            }
+            });
+            event.preventDefault();
+        });
+        });
+</script>
+
+<nav id="requestHeader" class="navbar navbar-expand-lg navbar-dark primary-color" style="padding:0px 0px 20px 0px">
+    <span style="padding:0px 100px 0px 0px">
+        <button type="button" class="btn btn-info d-flex justify-content-center align-content-between" onclick="OpenAddModal(0);">
+            <i class="material-icons mr-1">receipt</i> <span>Create New Request</span>
+        </button>
+    </span>
+    <h2 id="h2Request">@TempData["Request"] Requests</h2>
+        
+    <ul class="navbar-nav mr-auto" style="padding:0px 25px 0px 25px; cursor:pointer">
+        @{
+            string PSArchitect = Context.Session.GetString("PSArchitect");
+            string userId = Context.Session.GetString("UserID");
+
+            if (PSArchitect == "True")
+            {
+                <li class="nav-item dropdown">
+                    <a class="dropdown-toggle" id="navbarDropdownMenuLink1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Filter</a>
+                    <div class="dropdown-menu dropdown-primary" aria-labelledby="navbarDropdownMenuLink1">
+                        <a class="dropdown-item filters" id="All">All Requests</a>
+                        <a class="dropdown-item filters" id="My">My Requests</a>
+                        <a class="dropdown-item filters" id="Unassigned">Unassigned Requests</a>
+                    </div>
+                </li>
+                } }
+        </ul>
+            
+        
+    <form class="form-inline text-right" style="padding:0px 0px 0px 0px;" id="frmSearch">
+        <input class="form-control mr-sm-2" type="search" placeholder="Enter Ticket #" aria-label="Search" id="txtSearch" autocomplete="off" required pattern="[0-9]{6}" title="Ticket number is invalid: 6 numeric digits.">
+        <button class="btn btn-outline-success d-flex justify-content-center align-content-between" type="submit"><i class="material-icons mr-1">search</i> Search</button>
+    </form>
+
+</nav>
+
+@{ await Html.RenderPartialAsync("/Views/Partial/Requests.cshtml");}
+
+
+
+<div class="modal hide fade" id="myLoadingModal" aria-labelledby="myLoadingModal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            Loading...
+        </div>
+    </div>
+</div>
+<script>
+
+
+    $(document).ready(function () {
+        $('#topheader .navbar-nav').find('li.active').removeClass('active');
+        $('#navHome').addClass('active');
+    });
+    $('.childDiv').click(function () {
+        $(this).parent().find('.childDiv').css('border', 'none');
+        $(this).css('border', 'solid 2px #5bc0eb');
+    });
+</script>

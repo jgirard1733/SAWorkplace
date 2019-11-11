@@ -1,0 +1,365 @@
+﻿@model SAWorkplace.Models.RequestEditModel
+@using System.Text.RegularExpressions
+
+<script>
+    $(document).ready(function () {
+        $('#txtDescription').trumbowyg({
+            btns: [
+                ['formatting'],
+                ['strong'],
+                ['emphasis'],
+                ['link'],
+                ['insertImage'],
+                ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+                ['unorderedList', 'orderedList'],
+                ['horizontalRule'],
+                ['fullscreen'],
+                ['foreColor']
+            ]
+        });
+        var dateToday = new Date();
+        dateToday.setDate(dateToday.getDate() + 2);
+        //$("body select").msDropDown();
+        $('#dcTestTime').datetimepicker(
+            {
+                format: 'm/d/Y H:i',
+                formatTime: 'H:i',
+                minDate: dateToday,
+                beforeShowDay: function(date){ return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5,""]}}
+        );
+
+        $('#dcRequestReviewDate').datetimepicker(
+            {
+                format: 'm/d/Y',
+                step: 60,
+                timepicker: false,
+                minDate: dateToday,
+                beforeShowDay: function(date){ return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5,""]}}
+        );
+        $('#dcIssueDate').datetimepicker(
+            {
+                format: 'm/d/Y',
+                step: 60,
+                timepicker: false,
+                minDate: dateToday,
+                beforeShowDay: function(date){ return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5,""]}}
+        );
+
+         $('#dcFeaReviewDate').datetimepicker(
+            {
+                format: 'm/d/Y',
+                step: 60,
+                timepicker: false,
+                minDate: dateToday,
+                beforeShowDay: function(date){ return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5,""]}}
+        );
+
+    });
+
+    $('#frmEditRequest').submit(function (e) {
+
+        var formData = new FormData(this);
+
+        $.ajax({
+            url: '@Url.Action("EditRequest", "Home")',
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (result) {
+                if (result.success == true) {
+                    $('#myEditModal').modal('hide');
+                    $('#requestContainer').load('/Home/Requests');
+                }
+            },
+            error: function (result) {
+                console.log(result.responseText);
+            }
+        });
+        e.preventDefault();
+    });
+
+
+    if (@Model.Requests.RequestType != "") { changeDisplay(@Model.Requests.RequestType)}
+
+    function DeleteDocument(DocID)
+    {
+        $.ajax({
+            url: '@Url.Action("DeleteDocument", "Document")',
+            type: "GET",
+            data: { documentID: DocID },
+            success: function (result) {
+                if (result.success == true) {
+                    $('#documents').html(result);
+                }
+                else if (result.success == false) {
+                    alert('fail ' + result.responseText);
+                }
+            },
+            error: function (result) {
+                console.log(result.responseText);
+            }
+        });
+    }
+
+    function changeDisplay(requestType) {
+        if (requestType == '1') {
+            $('#WebService_CodeReview_Edit').removeClass('hide');
+            $('#WebService_CodeReview_Edit').addClass('show');
+            $('#WebService_LoadTest_Edit').removeClass('show');
+            $('#WebService_LoadTest_Edit').addClass('hide');
+            $('#SARequest_Edit').removeClass('show');
+            $('#SARequest_Edit').addClass('hide');
+            $('#Request_Issue_Edit').removeClass('show');
+            $('#Request_Issue_Edit').addClass('hide');
+            $('#lblDescription').text('Description of Request');
+            $('#Questionaire').removeAttr('required');
+        }
+        else if (requestType == '2') {
+            $('#WebService_CodeReview_Edit').removeClass('show');
+            $('#WebService_CodeReview_Edit').addClass('hide');
+            $('#WebService_LoadTest_Edit').removeClass('hide');
+            $('#WebService_LoadTest_Edit').addClass('show');
+            $('#SARequest_Edit').removeClass('show');
+            $('#SARequest_Edit').addClass('hide');
+            $('#Request_Issue_Edit').removeClass('show');
+            $('#Request_Issue_Edit').addClass('hide');
+            $('#lblDescription').text('Description of Request');
+            $('#Questionaire').removeAttr('required');
+        }
+        else if (requestType == '3') {
+            $('#WebService_CodeReview_Edit').removeClass('show');
+            $('#WebService_CodeReview_Edit').addClass('hide');
+            $('#WebService_LoadTest_Edit').addClass('hide');
+            $('#WebService_LoadTest_Edit').removeClass('show');
+            $('#SARequest_Edit').removeClass('show');
+            $('#SARequest_Edit').addClass('hide');
+            $('#Request_Issue_Edit').removeClass('hide');
+            $('#Request_Issue_Edit').addClass('show');
+            $('#lblDescription').text('Description of Request');
+            $('#Questionaire').removeAttr('required');
+        }
+        else if (requestType == '4') {
+            $('#WebService_CodeReview_Edit').removeClass('show');
+            $('#WebService_CodeReview_Edit').addClass('hide');
+            $('#WebService_LoadTest_Edit').removeClass('show');
+            $('#WebService_LoadTest_Edit').addClass('hide');
+            $('#SARequest_Edit').removeClass('hide');
+            $('#SARequest_Edit').addClass('show');
+            $('#Request_Issue_Edit').removeClass('show');
+            $('#Request_Issue_Edit').addClass('hide');
+            $('#Questionaire').prop('required',true);
+            $('#lblDescription').text('Description of Request');
+        }
+        else if (requestType == '5') {
+            $('#WebService_CodeReview_Edit').removeClass('show');
+            $('#WebService_CodeReview_Edit').addClass('hide');
+            $('#WebService_LoadTest_Edit').removeClass('show');
+            $('#WebService_LoadTest_Edit').addClass('hide');
+            $('#SARequest_Edit').removeClass('show');
+            $('#SARequest_Edit').addClass('hide');
+            $('#Request_Issue_Edit').removeClass('show');
+            $('#Request_Issue_Edit').addClass('hide');
+            $('#lblDescription').text('Description of Concern');
+            $('#Questionaire').removeAttr('required');
+        }
+        else {
+            $('#WebService_CodeReview_Edit').removeClass('show');
+            $('#WebService_CodeReview_Edit').addClass('hide');
+            $('#WebService_LoadTest_Edit').removeClass('show');
+            $('#WebService_LoadTest_Edit').addClass('hide');
+            $('#SARequest_Edit').removeClass('show');
+            $('#SARequest_Edit').addClass('hide');
+            $('#Request_Issue_Edit').removeClass('show');
+            $('#Request_Issue_Edit').addClass('hide');
+            $('#lblDescription').text('Description of Request');
+            $('#Questionaire').removeAttr('required');
+        }
+    };
+</script>
+
+@Html.HiddenFor(model => model.Requests.RequestId)
+@Html.HiddenFor(model => model.Requests.RequestDate)
+@Html.HiddenFor(model => model.Requests.TicketNumber)
+@Html.HiddenFor(model => model.Requests.RequestType)
+@Html.HiddenFor(model => model.Requests.Requestor)
+@Html.HiddenFor(model => model.Requests.RequestorName)
+@Html.HiddenFor(model => model.Requests.RequestorEmail)
+@Html.HiddenFor(model => model.Requests.AssignedSA)
+@Html.HiddenFor(model => model.Requests.AssignedSAEmail)
+@Html.HiddenFor(model => model.Requests.AssignedSAName)
+@Html.HiddenFor(model => model.Requests.RequestStatus)
+@Html.HiddenFor(model => model.Requests.AlertType)
+@Html.HiddenFor(model => model.Requests.RequestDesc)
+<div class="row" id="EditRequestContainer">
+    <div class="form-group col-6">
+        <label for="Requests_ProjectName" class="col-form-label-sm">Project/Request Name</label>
+        <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">class</i></span>
+            </div>
+            @Html.EditorFor(model => model.Requests.ProjectName, new { htmlAttributes = new { @class = "form-control", required = "required" } })
+            <span class="icon-validation" data-icon="&#xe000"></span>
+        </div>
+    </div>
+    <div class="form-group col-6">
+        <label for="Requests_CarrierId" class="col-form-label-sm">Carrier</label>
+        <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">account_balance</i></span>
+            </div>
+            @Html.DropDownListFor(model => model.Requests.CarrierId, new SelectList(Model.Carriers, "CarrierId", "CarrierName"), "--Choose Carrier--", new { @class = "form-control", required = "required" })
+            @*<select name="@Html.NameFor(x=>x.Requests.CarrierId)" id="@Html.IdFor(x=>x.Requests.CarrierId)" class="form-control" required>
+                    <option value="">--Choose Carrier--</option>
+                    @foreach (var carrier in Model.Carriers)
+                    {
+                        <option value="@carrier.CarrierId" data-imagecss="ddLogo" data-image="@carrier.CarrierLogo">@carrier.CarrierName</option>
+                    }
+                </select>*@
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="form-group col-6">
+        <label for="Requests_RequestType" class="col-form-label-sm">Request Type</label>
+        <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">dynamic_feed</i></span>
+            </div>
+            @Html.DropDownListFor(model => model.Requests.RequestType, new SelectList(Model.RequestTypes, "RequestType", "RequestName"), "--Choose Request Type--", new { @class = "form-control disabled", @onchange = "changeDisplay(this.value);", required = "required", @disabled = "disabled" })
+        </div>
+    </div>
+    <div class="form-group col-6">
+        <label for="Requests_ProjectName" class="col-form-label-sm">Projector Code</label>
+        <div class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">home_work</i></span>
+            </div>
+            @Html.EditorFor(model => model.Requests.ProjectorCode, new { htmlAttributes = new { @class = "form-control", required = "required" } })
+        </div>
+    </div>
+</div>
+<div id="WebService_CodeReview_Edit" class="hide">
+    <div class="row">
+        <div class="form-group col-6">
+            <label for="Requests_TFSPath" class="col-form-label-sm">TFS Path</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">list</i></span>
+                </div>
+                @Html.EditorFor(model => model.Requests.TFSPath, new { htmlAttributes = new { @class = "form-control", autocomplete = "off" } })
+            </div>
+        </div>
+        <div class="form-group col-6">
+            <label for="Requests_RequestReviewDate" class="col-form-label-sm">Requested Due Date</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">av_timer</i></span>
+                </div>
+                @{
+                    string Review = Model.Requests.RequestReviewDate.HasValue != false ? (string)Model.Requests.RequestReviewDate.Value.ToString("MM/dd/yyyy") : null;
+                }
+                <input type="text" id="dcRequestReviewDate" name="@Html.NameFor(model => model.Requests.RequestReviewDate)" class="form-control" value="@Html.Raw(Review)" autocomplete="off" />
+            </div>
+        </div>
+    </div>
+</div>
+<div id="WebService_LoadTest_Edit" class="hide">
+    <div class="row">
+        <div class="form-group col-6">
+            <label for="Requests_WebServiceURLs" class="col-form-label-sm">Web Service URLs</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">http</i></span>
+                </div>
+                @Html.EditorFor(model => model.Requests.WebServiceURLs, new { htmlAttributes = new { @class = "form-control", autocomplete = "off" } })
+            </div>
+        </div>
+        <div class="form-group col-6">
+            <label for="Requests_TestTime" class="col-form-label-sm">Preferred Test Time</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">av_timer</i></span>
+                </div>
+                @{
+                    string Test = Model.Requests.TestTime.HasValue != false ? (string)Model.Requests.TestTime.Value.ToString("MM/dd/yyyy HH:mm") : null;
+                }
+                <input type="text" id="dcTestTime" name="@Html.NameFor(model => model.Requests.TestTime)" class="form-control" value="@Html.Raw(Test)" autocomplete="off" />
+            </div>
+        </div>
+    </div>
+</div>
+<div id="Request_Issue_Edit" class="hide">
+    <div class="row">
+        <div class="form-group col-6">
+            <label for="Requests_IssueReviewDate" class="col-form-label-sm">Requested Due Date</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">av_timer</i></span>
+                </div>
+                @{
+                    string Issue = Model.Requests.IssueReviewDate.HasValue != false ? (string)Model.Requests.IssueReviewDate.Value.ToString("MM/dd/yyyy") : null;
+                }
+                <input type="text" id="dcIssueDate" name="@Html.NameFor(model => model.Requests.IssueReviewDate)" class="form-control" value="@Html.Raw(Issue)" autocomplete="off" />
+            </div>
+        </div>
+    </div>
+</div>
+<div id="SARequest_Edit" class="hide">
+    <div class="row">
+        <div class="form-group col-6">
+            <label for="Requests_FeasibilityReviewDate" class="col-form-label-sm">Requested Review Date</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">av_timer</i></span>
+                </div>
+                @{
+                    string Feasibility = Model.Requests.FeasibilityReviewDate.HasValue != false ? (string)Model.Requests.FeasibilityReviewDate.Value.ToString("MM/dd/yyyy") : null;
+                }
+                <input type="text" id="dcFeaReviewDate" name="@Html.NameFor(model => model.Requests.FeasibilityReviewDate)" class="form-control" value="@Html.Raw(Feasibility)" autocomplete="off" />
+            </div>
+        </div>
+        <div class="form-group col-6"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="form-group col-12">
+        <label for="Requests_RequestDesc" class="col-form-label-sm" id="lblDescription"><u>Description of Request</u></label>
+        <br />
+        <div class="info-text">@Html.Raw(Model.Requests.RequestDesc)</div>
+    </div>
+</div>
+<hr />
+<div id="myDocumentContainer">
+    @{ 
+        DocumentDisplayModel documentModel = new DocumentDisplayModel();
+        documentModel.Documents = Model.Documents;
+        documentModel.TicketNumber = Model.Requests.TicketNumber;
+        documentModel.RequestType = Model.Requests.RequestType;
+        await Html.RenderPartialAsync("/Views/Partial/Documents.cshtml", documentModel);
+        }
+</div>
+<hr />
+
+<div class="row">
+    <div class="form-group col-12">
+        <label class="col-form-label-sm" id="lblDescription"><u>Comments</u></label>
+        <table width="100%" border="0">
+            @{
+                foreach (var comment in Model.History)
+                {
+                    <tr>
+                        <td class="info-text">@comment.AddedBy: @comment.History - @comment.AddDateTime</td>
+                    </tr>
+                }
+            }
+        </table>
+    </div>
+    <div class="form-group col-6">
+        <textarea id="newComment" name="newComment" class="form-control" placeholder="Add Comment" width="100%" spellcheck="true" rows="2"></textarea>
+    </div>
+
+</div>
+

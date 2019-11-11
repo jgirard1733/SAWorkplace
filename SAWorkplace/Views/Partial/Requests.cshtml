@@ -1,0 +1,328 @@
+﻿@model SAWorkplace.Models.RequestDisplayModel
+@using System.DirectoryServices.AccountManagement
+@using System.DirectoryServices
+@using System.Security.Claims
+
+<script>
+    $(document).ready(function () {
+        $(".se-pre-con").fadeOut("slow");
+    });
+
+    function OpenEditModal(ticketNum) {
+        $('#PreviewAdd').html("");
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("EditRequest", "Home")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewEdit').html(data);
+                $('#myEditModal').modal({
+                show: true,
+                keyboard: false,
+                backdrop: 'static'});
+            }
+        });
+    };
+
+    function OpenAddModal() {
+        $('#PreviewEdit').html("");
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("AddRequest", "Home")',
+            success: function (data) {
+                $('#PreviewAdd').html(data);
+                $('#myAddModal').modal({
+                    show: true,
+                    keyboard: false,
+                    backdrop: 'static'
+                });
+            }
+        });
+     };
+
+    function CloseModals() {
+        $('#myAddModal').modal('hide');
+        $('#myEditModal').modal('hide');
+    };
+
+    function CloseEditModal() {
+        $('#myEditModal').modal('hide');
+
+    };
+</script>
+<div class="se-pre-con"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Loading Requests...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+
+@{
+    if (Model.Requests.Count() == 0)
+    {
+        <hr />
+        <div class="info-text-lg text-center col-12">We could not find any requests!</div>
+    }
+    else
+    {
+        <div id="requestContainer">
+            @{
+                foreach (var request in Model.Requests)
+                {
+                    var profileImage_SA = "/img/PersonPlaceholder.png";
+                    var profileImage_requestor = "/img/PersonPlaceholder.png";
+                    //try
+                    //{
+                    //    using (var context = new PrincipalContext(ContextType.Domain, "CORP"))
+                    //    {
+                    //        if (request.AssignedSA.Length > 0)
+                    //        {
+                    //            var SA = UserPrincipal.FindByIdentity(context, request.AssignedSA);
+                    //            if (SA != null)
+                    //            {
+                    //                //profileImage = "https://outlook.office365.com/owa/service.svc/s/GetPersonaPhoto?email=" + SA.EmailAddress;
+                    //                profileName_SA = string.Format("{0} {1}", SA.GivenName, SA.Surname);
+                    //            }
+                    //        }
+                    //        else
+                    //        {
+                    //            profileName_SA = "Unassigned";
+                    //        }
+
+                    //        var requestor = UserPrincipal.FindByIdentity(context, request.Requestor);
+                    //        if (requestor != null)
+                    //        {
+                    //            //profileImage_requestor = "https://outlook.office365.com/owa/service.svc/s/GetPersonaPhoto?email=" + requestor.EmailAddress;
+                    //            profileName_requestor = string.Format("{0} {1}", requestor.GivenName, requestor.Surname);
+                    //        }
+                    //    }
+                    //}
+                    //catch { }
+                    <div class="shadow bg-white rounded childDiv" style="padding:0px 0px 0px 0px !important; border-spacing:0px !important;" id="request1">
+                        <table width="100%">
+                            <tr>
+                                <td style="padding: 0px !important; width:15%">
+                                    <div class="info-text" style="padding:5px 0px 5px 8px">Ticket #: @request.TicketNumber</div>
+                                </td>
+                                <td style="padding: 0px !important">
+                                    <div>
+                                        @{
+                                            DateTime requested = request.RequestDate;
+                                            DateTime today = DateTime.Now;
+                                            var numberOfDays = today.Subtract(requested).TotalDays;
+                                            var numberOfHours = today.Subtract(requested).TotalHours;
+                                            string result = "";
+                                            if (numberOfDays < 1)
+                                            {
+                                                if (numberOfHours < 1)
+                                                {
+                                                    result = Math.Round(today.Subtract(requested).TotalMinutes) + " minutes";
+                                                }
+                                                else
+                                                {
+                                                    result = Math.Round(today.Subtract(requested).TotalHours) + " hours";
+                                                }
+                                            }
+                                            else
+                                            {
+                                                result = Math.Round(numberOfDays) + " days";
+                                            }
+
+
+                                        }
+                                        <span class="alert-heading">@request.ProjectName</span><span class="info-text"> submitted @result ago</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0px !important">
+                                    @{
+                                        StatusModel status = Model.Status.Where(x => x.ID.Equals(request.RequestStatus)).FirstOrDefault();
+                                        <div class="alert-custom @status.Class shadow-sm">@status.Text</div>
+                                    }
+                                </td>
+                                <td style="padding: 0px !important">
+                                    <div>
+                                        <span class="info-text-lg">
+                                            @{
+                                                var descLength = 100;
+                                                var showExt = "<span>...</span>";
+                                                if (request.RequestDesc != null)
+                                                {
+                                                    if (request.RequestDesc.Length < 100)
+                                                    {
+                                                        descLength = request.RequestDesc.Length;
+                                                        showExt = "";
+                                                    }
+                                                    @Html.Raw(request.RequestDesc.Substring(0, descLength) + showExt)
+                                                }
+                                            }
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:10px 0px 0px 0px" colspan="2">
+                                    <table class="info-panel" width="100%">
+                                        <tr>
+                                            <td class="info-panel-border-right" width="100">
+                                                <button type="button" class="btn btn-light" onclick="OpenEditModal(@request.TicketNumber)"><i class="material-icons">more_horiz</i></button>
+                                            </td>
+                                            <td class="info-panel-border-right" width="150">
+                                                <div class="info-text">Projector Code</div>
+                                                <div class="info-text-lg">@request.ProjectorCode</div>
+                                            </td>
+                                            <td class="info-panel-border-right" width="200">
+                                                <div class="info-text">Due</div>
+                                                <div class="info-text-bold">
+                                                    @{
+                                                        if (request.RequestType == 4)
+                                                        {
+                                                            if (request.RequestStatus <= 5)
+                                                            {
+                                                                @request.FeasibilityReviewDate.Value.ToShortDateString();
+                                                            }
+                                                            else if (request.RequestStatus == 6)
+                                                            {
+                                                                @request.InitiationReviewDate.Value.ToShortDateString();
+                                                            }
+                                                            else if (request.RequestStatus == 7)
+                                                            {
+                                                                @request.ImplementationReviewDate.Value.ToShortDateString();
+                                                            }
+                                                        }
+                                                        else if (request.RequestType == 3)
+                                                        {
+                                                            @request.IssueReviewDate.Value.ToShortDateString();
+                                                        }
+                                                        else if (request.RequestType == 2)
+                                                        {
+                                                            @request.TestTime.Value.ToString("MM/dd/yyyy hh:mm tt", System.Globalization.CultureInfo.InvariantCulture)
+                                                        }
+                                                        else
+                                                        {
+                                                            if (request.RequestReviewDate != null)
+                                                            {
+                                                                @request.RequestReviewDate.Value.ToShortDateString();
+                                                            }
+                                                        }
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td class="info-panel-border-right" width="250">
+                                                <table style="padding: 0px 0px 0px 0px">
+                                                    <tr>
+                                                        <td>
+                                                            <img class="btn-sm" height="38" width="45" src="@profileImage_requestor" style="border-radius:50%;" />
+                                                        </td>
+                                                        <td>
+                                                            <div class="info-text">Requestor</div>
+                                                            <div class="info-text-bold">@request.RequestorName</div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                            <td class="info-panel-border-right" width="200">
+                                                <table style="padding: 0px 0px 0px 0px">
+                                                    <tr>
+                                                        <td>
+                                                            <img class="btn-sm" height="38" width="45" src="@profileImage_SA" style="border-radius:50%;" />
+                                                        </td>
+                                                        <td>
+                                                            <div class="info-text">Assigned To</div>
+                                                            @{
+                                                                if (request.AssignedSA == null || request.AssignedSA == "")
+                                                                {
+                                                                    <div class="info-text-bold" style="color:red">Unassigned</div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div class="info-text-bold">@request.AssignedSAName</div>
+                                                                }
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                            <td class="info-panel-border-right" width="300">
+                                                @{
+                                                    try
+                                                    {
+                                                        RequestTypeModel requestType = Model.RequestTypes.Where(x => Convert.ToInt32(x.RequestType) == Convert.ToInt32(request.RequestType)).FirstOrDefault();
+                                                        <div class="info-text">Request Type</div>
+                                                        <div class="info-text-lg">@requestType.RequestName</div>
+
+                                                    }
+                                                    catch
+                                                    {
+                                                        <div class="info-text">Request Type</div>
+                                                        <div class="info-text-lg">Unknown Request</div>
+                                                    }
+                                                }
+                                            </td>
+                                            <td class="info-panel-border-right" width="250">
+                                                @{
+                                                    try
+                                                    {
+                                                        CarrierModel carrier = Model.Carriers.Where(x => x.CarrierId.Equals(request.CarrierId)).FirstOrDefault();
+                                                        <img src="@carrier.CarrierLogo" height="40" width="40" /> <span class="info-text">@carrier.CarrierName</span>
+
+                                                    }
+                                                    catch
+                                                    {
+                                                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png" height="40" width="40" /> @Html.Raw("Unidentified Carrier");
+                                                    }
+                                                }
+                                            </td>
+                                            <td width="40%" style="padding-left:10px">
+                                                <div class="info-text">Progress</div>
+                                                @{
+                                                    AlertModel alerts = Model.Alerts.Where(a => a.AlertId.Equals(request.AlertType)).FirstOrDefault();
+                                                }
+                                                @Html.Raw(alerts.AlertClass)
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <br />
+                }
+            }
+        </div>
+    }
+}
+
+<div class="modal hide fade" id="myAddModal" aria-labelledby="myAddModal" aria-hidden="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddRequest" asp-controller="Home" method="POST" data-ajax="true" data-ajax-update="myAddModal" id="frmRequest">
+                <div class="modal-header" style="padding:10px 20px 0px 20px;">
+                    <h5 class="modal-title" id="modalAddTitle">Create New Request</h5>
+                    <button type="button" class="close" onclick="CloseModals();" style="color:white;">&times;</button>
+                </div>
+                <div class="modal-body" id="PreviewAdd">
+                    @*PartialView*@
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-outline-success">Submit Request!</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal hide fade" id="myEditModal" aria-labelledby="myEditModal" aria-hidden="true" role="dialog" style="z-index:2000">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="EditRequest" asp-controller="Home" method="POST" data-ajax="true" data-ajax-update="myEditModal" id="frmEditRequest">
+                <div class="modal-header" style="padding:10px 20px 0px 20px;">
+                    <h5 class="modal-title" id="modalEditTitle">Update Request</h5>
+                    <button type="button" class="close" onclick="CloseModals();" style="color:white;">&times;</button>
+                </div>
+                <div class="modal-body" id="PreviewEdit">
+                    @*PartialView*@
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-outline-success">Update Request!</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

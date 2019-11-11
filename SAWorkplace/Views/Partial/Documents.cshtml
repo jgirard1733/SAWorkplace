@@ -1,0 +1,185 @@
+﻿@model SAWorkplace.Models.DocumentDisplayModel
+    <script>
+        $('#Questionaire').on('change', function () {
+        //get the file name
+        var fileName = $(this).val();
+        //replace the "Choose a file" label
+        fileName = fileName.substring(fileName.lastIndexOf("\\") + 1, fileName.length);
+        $(this).next('#questionaireLabel').html(fileName);
+    });
+
+    $('#Review_Result').on('change', function () {
+        //get the file name
+        var fileName = $(this).val();
+        //replace the "Choose a file" label
+        fileName = fileName.substring(fileName.lastIndexOf("\\") + 1, fileName.length);
+        $(this).next('#review_resultLabel').html(fileName);
+    });
+
+    function DeleteDocument(documentId, documentName, ticketNum, requestType) {
+        $('#txtDocumentID').val(documentId);
+        $('#txtTicketNumber').val(ticketNum);
+        $('#txtRequestType').val(requestType);
+        $('#lblMessage').text('Are you sure you want to DELETE ' + decodeHtml(documentName) + '?');
+        $('#myDeleteModal').modal({
+            show: true,
+            keyboard: false,
+            backdrop: 'static'
+        });
+    }
+
+    function AddDocument(ticketNum, requestType) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("AddDocument", "Document")',
+            data: { ticketNum: ticketNum, requestType: requestType },
+            success: function (data) {
+                $('#PreviewAddDoc').html(data);
+                $('#myAddDocModal').modal({
+                    show: true,
+                    keyboard: false,
+                    backdrop: 'static'
+                });
+            }
+        });
+    }
+
+    $('#frmAddDocument').submit(function (e) {
+        var formData = new FormData(this);
+
+        $.ajax({
+            url: '@Url.Action("AddDocument", "Document")',
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                $('#myAddDocModal').modal('hide');
+                $('#myDocumentContainer').html(data);
+            },
+            error: function (data) {
+                console.log("Error: " + data.responseText);
+                $('#myAddDocModal').modal('hide');
+                $('#myDocumentContainer').html(data);
+
+            }
+        });
+        e.preventDefault();
+    });
+
+    function Delete(documentId, ticketNum, requestType) {
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("DeleteDocument", "Document")',
+            data: { documentID: documentId, ticketNum: ticketNum, requestType: requestType },
+            success: function (data) {
+                $('#myDeleteModal').modal('hide');
+                $('#myDocumentContainer').html(data);
+            }
+        })
+    }
+
+    function decodeHtml(html) {
+        var txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
+    }
+
+    function CloseDeleteModal() {
+        $('#myDeleteModal').modal('hide');
+        };
+
+        function CloseAddModal() {
+        $('#myAddDocModal').modal('hide');
+    };
+    </script>
+    <div class="row" id="documents">
+        @{ 
+            if (Model != null)
+            {
+                <div class="form-group col-12">
+
+                    <label class="col-form-label"><u>Documents</u></label> <a href="#" onclick="AddDocument('@Model.TicketNumber')"><img src="~/img/indicators/add.png" height="15" width="15" /></a>
+                    <table width="60%" border="0" class="table-striped">
+                        @{ foreach (var doc in Model.Documents)
+                            {
+                                var imgsrc = "/img/docTypes/" + doc.DocumentExt + ".png";
+                                <tr>
+                                    <td class="info-text" width="15"><img src="@imgsrc" height="15" width="15" border="0" style="margin:0; padding:0" /></td>
+                                    <td class="info-text" height="18"><a target="_blank" href="@Url.Content(doc.DocumentPath + "/" + doc.DocumentName)">@doc.DocumentName</a></td>
+                                    <td class="info-text" height="18">@doc.DocumentType</td>
+                                    <td class="info-text" height="18">@doc.DocumentModifiedDate</td>
+                                    <td class="info-text" height="18">@doc.DocumentModifiedByName</td>
+                                    <td class="info-text" width="20"><a href="#" onclick="DeleteDocument(@doc.ID, '@doc.DocumentName', '@doc.TicketNumber', '@Model.RequestType')" style="padding:0"><img src="~/img/indicators/delete.png" height="15" width="15" /></a></td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                </div>
+
+            }
+            else
+            {
+                if (Model.RequestType == 1)
+                {
+                    <div class="form-group col-6">
+                        <label class="col-form-label-sm">Review Result</label>
+                        <div class="custom-file">
+                            <input type="file" id="Review_Result" name="Review_Result" class="custom-file-input" accept=".docx" placeholder="Please choose your Review Result...">
+                            <label class="custom-file-label" id="review_resultLabel" name="review_resultLabel" for="Review_Result">Please Upload your Completed Review Result</label>
+                        </div>
+                    </div>
+                }
+                if (Model.RequestType == 4)
+                {
+                    <div class="form-group col-6">
+                        <label class="col-form-label-sm">Questionaire</label>
+                        <div class="custom-file">
+                            <input type="file" id="Questionaire" name="Questionaire" class="custom-file-input" accept=".docx" placeholder="Please choose your Questionaire...">
+                            <label class="custom-file-label" id="questionaireLabel" name="questionaireLabel" for="Questionaire">Please Upload your Completed Questionaire</label>
+                        </div>
+                    </div>
+                }
+            }
+        }
+    </div>
+
+
+<div class="modal hide" id="myDeleteModal" aria-labelledby="myDeleteModal" aria-hidden="true" style="z-index:2500;">
+    <div class="modal-dialog" style="width:50%; padding-left:100px">
+        <div class="modal-content" style="width:50%">
+            <div class="modal-header" style="padding:10px 20px 0px 20px;">
+                <h5 class="modal-title" id="modalTitle">Delete Document</h5>
+                <button type="button" class="close" onclick="CloseDeleteModal();" style="color:white;">&times;</button>
+            </div>
+            <p style="margin:10px 10px 10px 10px"><label id="lblMessage" style="color:red;"></label></p>
+            <input type="hidden" id="txtDocumentID" />
+            <input type="hidden" id="txtTicketNumber" />
+            <input type="hidden" id="txtRequestType"/>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-info" onclick="CloseDeleteModal();">Cancel</button>
+                <button type="button" class="btn btn-outline-danger" onclick="Delete($('#txtDocumentID').val(), $('#txtTicketNumber').val(), $('#txtRequestType').val() )">Delete Document!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal hide" id="myAddDocModal" aria-labelledby="myAddModal" aria-hidden="true" style="z-index:2500;">
+    <div class="modal-dialog" style="width:50%; padding-left:100px">
+        <div class="modal-content" style="width:50%">
+            <form asp-action="AddDocument" asp-controller="Document" method="POST" data-ajax="true" data-ajax-update="myAddDocModal" id="frmAddDocument" data-ajax-mode="replace">
+                <div class="modal-header" style="padding:10px 20px 0px 20px;">
+                    <h5 class="modal-title" id="modalTitle">Add Document</h5>
+                    <button type="button" class="close" onclick="CloseAddModal();" style="color:white;">&times;</button>
+                </div>
+                <div class="modal-body" id="PreviewAddDoc">
+                    @*PartialView*@
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-outline-success">Add Document!</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
