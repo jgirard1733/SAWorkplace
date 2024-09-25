@@ -5,16 +5,40 @@ VisualStudioVersion = 16.0.29001.49
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SAWorkplace", "SAWorkplace\SAWorkplace.csproj", "{7AFF3F51-BC33-4FA7-B75A-ECB3C092E7DD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggerService", "LoggerService\LoggerService.csproj", "{2651BA46-3942-44E6-94F2-A69E8DCD9C29}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SA_OKTA_API", "SA_OKTA_API\SA_OKTA_API.csproj", "{60CD26E0-68A6-4DB4-95A0-96CABE19152B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7AFF3F51-BC33-4FA7-B75A-ECB3C092E7DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7AFF3F51-BC33-4FA7-B75A-ECB3C092E7DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AFF3F51-BC33-4FA7-B75A-ECB3C092E7DD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7AFF3F51-BC33-4FA7-B75A-ECB3C092E7DD}.Debug|x64.Build.0 = Debug|Any CPU
 		{7AFF3F51-BC33-4FA7-B75A-ECB3C092E7DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7AFF3F51-BC33-4FA7-B75A-ECB3C092E7DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AFF3F51-BC33-4FA7-B75A-ECB3C092E7DD}.Release|x64.ActiveCfg = Release|Any CPU
+		{7AFF3F51-BC33-4FA7-B75A-ECB3C092E7DD}.Release|x64.Build.0 = Release|Any CPU
+		{2651BA46-3942-44E6-94F2-A69E8DCD9C29}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{2651BA46-3942-44E6-94F2-A69E8DCD9C29}.Debug|x64.ActiveCfg = Debug|x64
+		{2651BA46-3942-44E6-94F2-A69E8DCD9C29}.Debug|x64.Build.0 = Debug|x64
+		{2651BA46-3942-44E6-94F2-A69E8DCD9C29}.Release|Any CPU.ActiveCfg = Release|x64
+		{2651BA46-3942-44E6-94F2-A69E8DCD9C29}.Release|x64.ActiveCfg = Release|x64
+		{2651BA46-3942-44E6-94F2-A69E8DCD9C29}.Release|x64.Build.0 = Release|x64
+		{60CD26E0-68A6-4DB4-95A0-96CABE19152B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60CD26E0-68A6-4DB4-95A0-96CABE19152B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60CD26E0-68A6-4DB4-95A0-96CABE19152B}.Debug|x64.ActiveCfg = Debug|x64
+		{60CD26E0-68A6-4DB4-95A0-96CABE19152B}.Debug|x64.Build.0 = Debug|x64
+		{60CD26E0-68A6-4DB4-95A0-96CABE19152B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60CD26E0-68A6-4DB4-95A0-96CABE19152B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60CD26E0-68A6-4DB4-95A0-96CABE19152B}.Release|x64.ActiveCfg = Release|x64
+		{60CD26E0-68A6-4DB4-95A0-96CABE19152B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

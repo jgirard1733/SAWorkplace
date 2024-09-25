@@ -1,37 +1,95 @@
-﻿
+﻿@using Microsoft.AspNetCore.Http;
+@using System.Web;
+    <style>
+        .ui.action.input input[type="file"] {
+            display: none;
+        }
+    </style>
 <script>
-    $('#Document').on('change', function () {
-        //get the file name
-        var fileName = $(this).val();
-        //replace the "Choose a file" label
-        fileName = fileName.substring(fileName.lastIndexOf("\\") + 1, fileName.length);
-        $(this).next('#documentLabel').html(fileName);
+    $(document).ready(function () {
+        $('.ui.dropdown').dropdown();
+                var formValidationRules =
+        {
+            DocumentType: {
+                identifier: 'DocumentType',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please choose a Document Type'
+                    },
+                ]
+            },
+            Document: {
+                identifier: 'Document',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please choose a Document to upload'
+                    },
+                ]
+            }
+        }
+
+       $('#frmAddDocument').form({
+            fields: formValidationRules,
+            inline: true
+       });
+          
+        $("input:text").click(function() {
+                $(this).parent().find("input:file").click();
+            });
+
+        $('input:file', '.ui.action.input').on('change', function (e) {
+            var name = e.target.files[0].name;
+            $('input:text', $(e.target).parent()).val(name);
+        });
+
+        var PSArchitect = '@Context.Session.GetString("PSArchitect")';
+        var viewType = '@Context.Session.GetString("ViewType")';
+
+        if (PSArchitect == 'False' || viewType != 'Admin') {
+            $("#DocumentType option[value='Feasibility Review']").remove();
+            $("#DocumentType option[value='Implementation Review']").remove();
+            $("#DocumentType option[value='Initiation Review']").remove();
+            $("#DocumentType option[value='Change Request Review']").remove();
+          }
+          if (viewType == 'User') {
+            $("#DocumentType option[value='Engagement Cord Report']").remove();
+          }
     });
 </script>
-<input type="hidden" value="@Model" id="ticketNum" name="ticketNum"/>
+<input type="hidden" value="@Model" id="ticketNum" name="ticketNum" />
 
-<div class="row" id="AddDocumentContainer">
-    <div class="form-group col-12">
-        <label for="DocumentType" class="col-form-label-sm">Document Type</label>
-        <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-                <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">file_copy</i></span>
-            </div>
-            <select name="DocumentType" id="DocumentType" class="form-control" required="required">
+<div class="field" id="AddDocumentContainer">
+    <div class="sixteen wide field">
+        <label>Document Type</label>
+        <div class="ui labeled input">
+            <label for="DocumentType" class="ui ltgray label"><i class="icon copy"></i></label>
+
+            <select name="DocumentType" id="DocumentType" data-validate="DocumentType" class="ui fluid selection dropdown">
                 <option value="">--Choose your Document Type--</option>
+                <option value="Change Request Review">Change Request Review</option>
+                <option value="Engagement Cord Report">Engagement Cord Report</option>
+                <option value="Feasibility Review">Feasibility Review</option>
+                <option value="Initiation Review">Initiation Review</option>
+                <option value="Implementation Review">Implementation Review</option>
+                <option value="POC Results">POC Results</option>
+                <option value="Requirements">Requirements</option>
+                <option value="SOW/Change Request">SOW/Change Request</option>
                 <option value="Web Service Review">Web Service Review</option>
                 <option value="Web Service Load Test">Web Service Load Test</option>
-                <option value="SOW/Change Request">SOW/Change Request</option>
-                <option value="Questionaire">Initiation Questionaire</option>
                 <option value="Workflow">Workflow</option>
             </select>
         </div>
     </div>
-    <div class="form-group col-12">
-        <label class="col-form-label-sm">New Document</label>
-        <div class="custom-file">
-            <input type="file" id="Document" name="Document" class="custom-file-input" accept=".docx" placeholder="Please choose your Document..." required>
-            <label class="custom-file-label" id="documentLabel" name="documentLabel" for="NewDocument">Please Upload your Document</label>
+    <div class="sixteen wide field">
+        <label for="Document">New Document</label>
+        <div class="ui action input">
+            <input type="text" placeholder="Please choose your Document..." readonly>
+            <input type="file" accept=".docx,.doc,.pdf,.xslx,.xsl,.ppt,.pptx,.vsd,.vsdx" id="Document" name="Document" data-validate="Document">
+            <div class="ui icon button">
+                <i class="attach icon"></i>
+            </div>
         </div>
     </div>
 </div>

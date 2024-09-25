@@ -1,0 +1,266 @@
+﻿@model SAWorkplace.Models.FeasibilityReviewModel
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Http;
+
+<script>
+    $(document).ready(function () {
+        var dateToday = new Date();
+        dateToday.setDate(dateToday.getDate());
+        $('#dcFeasReviewDate').datetimepicker(
+            {
+                format: 'm/d/Y',
+                step: 60,
+                timepicker: false,
+                minDate: dateToday,
+                beforeShowDay: function (date) { return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5, ""] },
+                value: dateToday
+            }
+        );
+
+        if ('@Model.Feas_RequirePOC' != "Yes") {
+            $('#Feas_RequirePOCDetail').hide();
+            $('#lblFeas_RequirePOCDetail').hide();
+        }
+        if ('@Model.Feas_IPProduct' != "Yes") {
+            $('#Feas_IPProductDetail').hide();
+            $('#lblFeas_IPProductDetail').hide();
+        }
+        if ('@Model.Feas_Gaps' != "Yes") {
+            $('#Feas_GapsDetail').hide();
+            $('#lblFeas_GapsDetail').hide();
+        }
+        if ('@Model.Feas_OutsideService' != "Yes") {
+            $('#Feas_OutsideServiceDetail').hide();
+            $('#lblFeas_OutsideServiceDetail').hide();
+        }
+        if ('@Model.Feas_BestUX' != "Yes") {
+            $('#Feas_BestUXDetail').hide();
+            $('#lblFeas_BestUXDetail').hide();
+        }
+        if ('@Model.Feas_StandardESig' != "Yes") {
+            $('#Feas_StandardESigDetail').hide();
+            $('#lblFeas_StandardESigDetail').hide();
+        }
+
+        @*var reviewDate = '@Model.Feas_ReviewDate';
+        if (reviewDate == "") {
+            var today = new Date();
+            var val = today.getMonth() + "/" + today.getDate() + "/" + today.getFullYear();
+            $('#Feas_ReviewDate').val(val);
+        }*@
+
+
+        var viewType = '@Context.Session.GetString("ViewType")';
+        //console.log("viewType =" + viewType)
+
+        if (viewType != "Admin") {
+            $("#frmFeasibilityForm :input").prop("disabled", true);
+            $("#FeasFormClose").prop("disabled", false);
+            $("#FeasFormButton").prop("disabled", false);
+        }
+                
+    });
+
+    $('#frmFeasibilityForm').submit(function (e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+
+        $.ajax({
+            url: '@Url.Action("FeasibilityForm", "Feasibility")',
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (result) {
+                if (result.success == true) {
+                    scrollTo(0, 0);
+                    setTimeout(top.location.href = '/Feasibility/EditFeasibility?ticketNum=' + result.ticketNum, 1000);
+                    //setTimeout(top.location.href = '/', 500);
+                }
+            },
+            error: function (result) {
+                console.log(result.responseText);
+            }
+        });
+        return false;
+    });
+
+</script>
+
+@Html.HiddenFor(model => model.ID)
+@Html.HiddenFor(model => model.TicketNumber)
+@Html.HiddenFor(model => model.ProjectName)
+@Html.HiddenFor(model => model.TeamMembers)
+
+<div class="two fields">
+    <div class="eight wide field">
+        <label for="Feas_ReviewDate">Review Date(s)</label>
+        <div class="ui labeled input">
+            <label for="Feas_ReviewDate" class="ui ltgray label"><i class="icon calendar alternate"></i></label>
+            @Html.EditorFor(model => model.Feas_ReviewDate, new { htmlAttributes = new { @class = "form-control", required = "required", autocomplete = "off" } })
+        </div>
+    </div>
+
+    <div class="eight wide field">
+        <label for="Feas_ReviewedBy">Reviewed By</label>
+        <div class="ui labeled input">
+            <label for="Feas_ReviewedBy" class="ui ltgray label"><i class="icon user md"></i></label>
+            @Html.EditorFor(model => model.Feas_ReviewedBy, new { htmlAttributes = new { @class = "form-control", required = "required", autocomplete = "off" } })
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Will this project require a POC?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Feas_RequirePOC, "Yes", new { id = "rbYes1", @onclick = "$('#Feas_RequirePOCDetail').show();$('#lblFeas_RequirePOCDetail').show();" })
+                @Html.Label("rbYes1", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Feas_RequirePOC, "No", new { id = "rbNo1", @onclick = "$('#Feas_RequirePOCDetail').hide();$('#lblFeas_RequirePOCDetail').hide();" })
+                @Html.Label("rbNo1", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Feas_RequirePOCDetail" id="lblFeas_RequirePOCDetail">If yes, explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Feas_RequirePOCDetail)" name="@Html.NameFor(model => model.Feas_RequirePOCDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_RequirePOCDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Is there any interaction with another iPipeline product?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Feas_IPProduct, "Yes", new { id = "rbYes2", @onclick = "$('#Feas_IPProductDetail').show();$('#lblFeas_IPProductDetail').show();" })
+                @Html.Label("rbYes2", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Feas_IPProduct, "No", new { id = "rbNo2", @onclick = "$('#Feas_IPProductDetail').hide();$('#lblFeas_IPProductDetail').hide();" })
+                @Html.Label("rbNo2", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Feas_IPProductDetail" id="lblFeas_IPProductDetail">If yes, explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Feas_IPProductDetail)" name="@Html.NameFor(model => model.Feas_IPProductDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_IPProductDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Have you identified any functional gaps with the project requirements vs standard?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Feas_Gaps, "Yes", new { id = "rbYes3", @onclick = "$('#Feas_GapsDetail').show();$('#lblFeas_GapsDetail').show();" })
+                @Html.Label("rbYes3", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Feas_Gaps, "No", new { id = "rbNo3", @onclick = "$('#Feas_GapsDetail').hide();$('#lblFeas_GapsDetail').hide();" })
+                @Html.Label("rbNo3", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Feas_GapsDetail" id="lblFeas_GapsDetail">If yes, explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Feas_GapsDetail)" name="@Html.NameFor(model => model.Feas_GapsDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_GapsDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Is this connecting with an outside service?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Feas_OutsideService, "Yes", new { id = "rbYes4", @onclick = "$('#Feas_OutsideServiceDetail').show();$('#lblFeas_OutsideServiceDetail').show();" })
+                @Html.Label("rbYes4", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Feas_OutsideService, "No", new { id = "rbNo4", @onclick = "$('#Feas_OutsideServiceDetail').hide();$('#lblFeas_OutsideServiceDetail').hide();" })
+                @Html.Label("rbNo4", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Feas_OutsideServiceDetail" id="lblFeas_OutsideServiceDetail">If yes, explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Feas_OutsideServiceDetail)" name="@Html.NameFor(model => model.Feas_OutsideServiceDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_OutsideServiceDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Can you offer the best UX for this solution?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Feas_BestUX, "Yes", new { id = "rbYes5", @onclick = "$('#Feas_BestUXDetail').show();$('#lblFeas_BestUXDetail').show();" })
+                @Html.Label("rbYes5", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Feas_BestUX, "No", new { id = "rbNo5", @onclick = "$('#Feas_BestUXDetail').hide();$('#lblFeas_BestUXDetail').hide();" })
+                @Html.Label("rbNo5", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Feas_OutsideServiceDetail" id="lblFeas_BestUXDetail">If yes, explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Feas_BestUXDetail)" name="@Html.NameFor(model => model.Feas_BestUXDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_BestUXDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Will the project be using the Standard eSig solution?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Feas_StandardESig, "Yes", new { id = "rbYes6", @onclick = "$('#Feas_StandardESigDetail').show();$('#lblFeas_StandardESigDetail').show();" })
+                @Html.Label("rbYes6", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Feas_StandardESig, "No", new { id = "rbNo6", @onclick = "$('#Feas_StandardESigDetail').hide();$('#lblFeas_StandardESigDetail').hide();" })
+                @Html.Label("rbNo6", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Feas_OutsideServiceDetail" id="lblFeas_StandardESigDetail">If yes, explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Feas_StandardESigDetail)" name="@Html.NameFor(model => model.Feas_StandardESigDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_StandardESigDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <label for="Feas_AdditionalCosts">Expected Additional Costs</label>
+        <div class="ui labeled input">
+            <label for="Feas_AdditionalCosts" class="ui ltgray label"><i class="icon money"></i></label>
+            <textarea id="@Html.IdFor(model => model.Feas_AdditionalCosts)" name="@Html.NameFor(model => model.Feas_AdditionalCosts)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_AdditionalCosts)</textarea>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Feas_ItemsNeeded" class="col-form-label-sm">Items Needed for Initiation Review</label>
+        <div class="ui labeled input">
+            <label for="Feas_ItemsNeeded" class="ui ltgray label"><i class="icon list"></i></label>
+            <textarea id="@Html.IdFor(model => model.Feas_ItemsNeeded)" name="@Html.NameFor(model => model.Feas_ItemsNeeded)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_ItemsNeeded)</textarea>
+        </div>
+    </div>
+</div>
+<div class="two fields">
+    <div class="eight wide field">
+        <label for="Feas_JIRAs" class="col-form-label-sm">JIRAs</label>
+        <div class="ui labeled input">
+            <label for="Feas_JIRAs" class="ui ltgray label"><i class="icon industry md"></i></label>
+            <textarea id="@Html.IdFor(model => model.Feas_JIRAs)" name="@Html.NameFor(model => model.Feas_JIRAs)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_JIRAs)</textarea>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Feas_Notes" class="col-form-label-sm">Notes</label>
+        <div class="ui labeled input">
+            <label for="Feas_Notes" class="ui ltgray label"><i class="icon copy md"></i></label>
+            <textarea id="@Html.IdFor(model => model.Feas_Notes)" name="@Html.NameFor(model => model.Feas_Notes)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Feas_Notes)</textarea>
+        </div>
+    </div>
+</div>

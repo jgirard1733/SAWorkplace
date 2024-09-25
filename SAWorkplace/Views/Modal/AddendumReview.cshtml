@@ -1,0 +1,99 @@
+﻿@model SAWorkplace.Models.RequestEditModel
+@using System.Text.RegularExpressions
+
+<script>
+    $(document).ready(function () {
+        var formValidationRules =
+        {
+            //Requests_RequestReviewDate: {
+            //    identifier: 'RequestReviewDate',
+            //    rules: [
+            //        {
+            //            type: 'empty',
+            //            prompt: 'Please enter a Requested Review Date!'
+            //        }
+            //    ]
+            //},
+            newComment: {
+                identifier: 'RequestReason',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please describe why this review is neeeded!'
+                    }
+                ]
+            }
+        }
+
+        $('#frmAddAddendumReview').form({
+            fields: formValidationRules,
+            inline: true
+        });
+
+        @{
+            DateTime selectedDate;
+            selectedDate = SAWorkplace.Helpers.BusinessDays.AddBusinessDays(DateTime.Now, 2);
+        }
+        $('#dcAddendumReviewDate').datetimepicker(
+            {
+            format: 'm/d/Y',
+                step: 60,
+                timepicker: false,
+                minDate: '@selectedDate',
+                beforeShowDay: function (date) { return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5, ""] },
+                value: '@selectedDate'
+            }
+        );
+    });
+</script>
+@Html.HiddenFor(model => model.Requests.RequestId)
+@Html.HiddenFor(model => model.Requests.RequestDate)
+@Html.HiddenFor(model => model.Requests.TicketNumber)
+@Html.HiddenFor(model => model.Requests.RequestType)
+@Html.HiddenFor(model => model.Requests.Requestor)
+@Html.HiddenFor(model => model.Requests.RequestorName)
+@Html.HiddenFor(model => model.Requests.RequestorEmail)
+@Html.HiddenFor(model => model.Requests.RequestStatus)
+@Html.HiddenFor(model => model.Requests.ProgressType)
+@Html.HiddenFor(model => model.Requests.ProjectorCode)
+@Html.HiddenFor(model => model.Requests.OpportunityNameNumber)
+@Html.HiddenFor(model => model.Requests.RequestDesc)
+@Html.HiddenFor(model => model.Requests.Requirements)
+@Html.HiddenFor(model => model.Requests.SpecialChallenge)
+@Html.HiddenFor(model => model.Requests.CarrierId)
+@Html.HiddenFor(model => model.Requests.CarrierName)
+
+<div id="AddendumRequestContainer">
+    @*<div class="eight wide field">
+        <label for="Requests_RequestReviewDate">Requested Due Date</label>
+        @{
+            string Review = Model.Requests.RequestReviewDate.HasValue != false ? (string)Model.Requests.RequestReviewDate.Value.ToString("MM/dd/yyyy") : null;
+        }
+        <div class="ui labeled input" style="max-width:96%">
+            <label for="Requests_RequestReviewDate" class="ui ltgray label"><i class="icon calendar alternate"></i></label>
+
+            <input type="text" id="dcAddendumReviewDate" name="@Html.NameFor(model => model.Requests.RequestReviewDate)" value="@Html.Raw(Review)" autocomplete="off" data-validate="RequestReviewDate" />
+        </div>
+    </div>*@
+    <div class="eight wide field">
+        <label for="newComment">Reason for Requested Review</label>
+        <div class="ui labeled input">
+            <label for="newComment" class="ui ltgray label"><i class="icon comment alternate"></i></label>
+
+            <textarea id="newComment" name="newComment" placeholder="Please describe why this review is neeeded." width="100%" spellcheck="true" style="max-width:500px" cols="2" rows="6" autocomplete="off" data-validate="RequestReason"></textarea>
+        </div>
+    </div>
+</div>
+<div class="sixteen wide field" style="margin-top:10px !important">
+    <label for="myDocumentContainer">Please include any supporting documents in addition to what's below!</label>
+
+    <div id="myDocumentContainer">
+        @{
+            DocumentDisplayModel documentModel = new DocumentDisplayModel();
+            documentModel.Documents = Model.Documents;
+            documentModel.TicketNumber = Model.Requests.TicketNumber;
+            documentModel.RequestType = Model.Requests.RequestType;
+            await Html.RenderPartialAsync("/Views/Partial/Documents.cshtml", documentModel);
+        }
+    </div>
+</div>

@@ -1,0 +1,849 @@
+﻿@using Microsoft.AspNetCore.Http;
+@model SAWorkplace.Models.RequestEditModel
+@using System.Text.RegularExpressions
+<style>
+
+
+    .trumbowyg-box, .trumbowyg-editor {
+        margin: 0px auto !important;
+        min-height: 300px !important;
+    }
+
+    .trumbowyg-editor, .trumbowyg-textarea {
+        font-size: 14px;
+        min-height: 300px !important;
+    }
+</style>
+<link rel="stylesheet" href="~/css/jquery.datetimepicker.css" />
+<link rel="stylesheet" href="~/css/trumbowyg.colors.css" />
+<link rel="stylesheet" href="~/css/trumbowyg.min.css" />
+
+<script src="~/js/trumbowyg.min.js"></script>
+<script src="~/js/trumbowyg.colors.min.js"></script>
+<script src="~/js/trumbowyg.cleanpaste.min.js"></script>
+<script src="~/js/trumbowyg.allowtagsfrompaste.min.js"></script>
+<script src="~/js/jquery.datetimepicker.js"></script>
+<script>
+    $(document).ready(function () {
+        @{ var userName = Context.Session.GetString("UserName"); }
+
+        var fullname = '@userName';
+
+        if (fullname == null || fullname == '') {
+            $('#newRequest').removeClass('show');
+            $('#newRequest').addClass('hide');
+            $('#noNewRequest').addClass('show');
+            $('#noNewRequest').removeClass('hide');
+        }
+        else {
+            $('#newRequest').removeClass('hide');
+            $('#newRequest').addClass('show');
+            $('#noNewRequest').addClass('hide');
+            $('#noNewRequest').removeClass('show');
+        }
+
+        $(".se-pre-con").fadeOut("slow");
+
+            var formValidationRules =
+            {
+            Requests_ProjectName: {
+            identifier: 'ProjectName',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'You need to enter a Project Name!'
+                    },
+                    {
+                type: 'doesntContain['+fullname+']',
+                        prompt: 'You need to enter a Project Name, not your name!'
+                    }
+                ]
+            },
+            //Requests_ProjectName: {
+            //    identifier: 'ProjectName',
+            //    rules: [
+            //        {
+            //            type: 'doesntContain['+firstname+']',
+            //            prompt: 'You need to enter a Project Name, not your name!'
+            //        }
+            //    ]
+            //},
+            //Requests_ProjectName: {
+            //    identifier: 'ProjectName',
+            //    rules: [
+            //        {
+            //            type: 'doesntContain['+lastname+']',
+            //            prompt: 'You need to enter a Project Name, not your name!'
+            //        }
+            //    ]
+            //},
+             Carriers: {
+            identifier: 'Carriers',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'You need to choose a Carrier!'
+                    }
+                ]
+            },
+             supportedLanguages: {
+            identifier: 'supportedLanguages',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'You must enter the Language(s) your Carrier supports!'
+                    }
+                ]
+            },
+             sellingModel: {
+            identifier: 'sellingModel',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'You must enter the Selling Model(s) your Carrier supports!'
+                    }
+                ]
+            },
+             insuranceProducts: {
+            identifier: 'insuranceProducts',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'You must enter the Insurance Products(s) your Carrier supports!'
+                    }
+                ]
+            },
+             ipipelineProducts: {
+            identifier: 'ipipelineProducts',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'You must enter the iPipeline Products(s) your Carrier supports!'
+                    }
+                ]
+            },
+            //  Requests_OpportunityNameNumber: {
+            //    identifier: 'OpportunityNameNumber',
+            //    rules: [
+            //        {
+            //            type: 'empty',
+            //            prompt: 'You must enter the SOW, Change Request or Opportunity Number!'
+            //        }
+            //    ]
+            //},
+             Requests_ProjectorCode: {
+            identifier: 'ProjectorCode',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'Please enter a Projector Code!'
+                    },
+                    {
+                type   : 'exactLength[11]',
+                    prompt : 'Your Projector Code is invalid, please use a format like P000000-000!'
+                  }
+                ]
+            },
+              Requests_Technology: {
+            identifier: 'Technology',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'You must enter the types of Technology your Carrier uses!'
+                    }
+                ]
+            },
+            dcRequestReviewDate: {
+                identifier: 'RequestReviewDate',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'You must enter the Production Date!'
+                    }
+                ]
+            },
+            Requests_TeamMembers: {
+            identifier: 'TeamMembers',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'Please enter your project Team Members so they will also have access to this request!'
+                    }
+                ]
+            },
+            Requests_Director: {
+            identifier: 'Director',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'Please enter your project Director so they will also have access to this request!'
+                    }
+                ]
+            },
+            Requests_Requirements: {
+            identifier: 'Requirements',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'You must enter the Requirements!'
+                    }
+                ]
+            },
+            ProjectSelection: {
+            identifier: 'ProjectSelection',
+                rules: [
+                    {
+                type: 'empty',
+                        prompt: 'You must enter the Product Level change requirements!'
+                    }
+                ]
+            }
+        }
+
+        $('#docFlag').html("false");
+
+        $('#frmAddFeasibilityReview').form({
+            fields: formValidationRules,
+            inline: true
+        });
+
+        var esigSlider = '@Model.Requests.eSig';
+        console.log("esigSlider = " + esigSlider);
+        if (esigSlider == 'on' || esigSlider == 'Yes') {
+            console.log("Requests_eSig is checked");
+        $('#Requests_eSig').prop("checked", true);
+            updateESigSlider('Yes');
+        }
+        else if (esigSlider == 'off' || esigSlider == 'No') {
+            console.log("Requests_eSig is unchecked");
+        $('#Requests_eSig').prop("checked", false);
+            updateESigSlider('No');
+        }
+
+        var splunkSlider = '@Model.Requests.Splunk';
+        console.log("splunkSlider = " + splunkSlider);
+        if (splunkSlider == 'on' || splunkSlider == 'Yes') {
+            console.log("Requests_Splunk is checked");
+        $('#Requests_Splunk').prop("checked", true);
+            updateSplunkSlider('Yes');
+        }
+        else if (splunkSlider == 'off' || splunkSlider == 'No') {
+            console.log("Requests_Splunk is unchecked");
+        $('#Requests_Splunk').prop("checked", false);
+            updateSplunkSlider('No');
+        }
+
+        $('#supportedLanguages').dropdown();
+        $('#sellingModel').dropdown();
+        $('#insuranceProducts').dropdown();
+        $('#ipipelineProducts').dropdown();
+        $('#Requests_Technology').dropdown();
+        $('#Requests_TeamMembers').dropdown();
+        $('#Requests_Director').dropdown();
+        $('#Carriers').dropdown();
+        $('#ProjectSelection').dropdown();
+
+        var dateToday = new Date();
+        dateToday.setDate(dateToday.getDate() + 2);
+        $('#dcRequestReviewDate').datetimepicker(
+        {
+            format: 'm/d/Y',
+                step: 60,
+                timepicker: false,
+                minDate: dateToday,
+                beforeShowDay: function (date) { return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5, ""] }
+        });
+
+        $('#Requests_ProjectType').trumbowyg({
+            btns: [
+                ['formatting'],
+                ['strong'],
+                ['emphasis'],
+                ['link'],
+                ['insertImage'],
+                ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+                ['unorderedList', 'orderedList'],
+                ['horizontalRule'],
+                ['fullscreen'],
+                ['foreColor']
+            ],
+            plugins: {
+                allowTagsFromPaste: {
+                    allowedTags: ['p','br','hr','strong']
+                }
+                }
+            });
+
+        $('#frmAddFeasibilityReview').submit(function (e) {
+            console.log('form submission');
+            e.preventDefault();
+            var formData = new FormData(this);
+            var updatedLanguages = $('#supportedLanguages').val();
+            formData.append("updatedLanguages", updatedLanguages);
+            var updatedSelling = $('#sellingModel').val();
+            formData.append("updatedSelling", updatedSelling);
+            var updatedInsurance = $('#insuranceProducts').val();
+            formData.append("updatedInsurance", updatedInsurance);
+            var updatedProducts = $('#ipipelineProducts').val();
+            formData.append("updatedProducts", updatedProducts);
+            var updatedTechnology = $('#Requests_Technology').val();
+            formData.append("updatedTechnology", updatedTechnology);
+            var updatedTeamMembers = $('#Requests_TeamMembers').val();
+            formData.append("updatedTeamMembers", updatedTeamMembers);
+            var updatedDirector = $('#Requests_Director').val();
+            formData.append("updatedDirector", updatedDirector);
+            var addformSuccess = $('#frmAddFeasibilityReview').form('is valid');
+            if (addformSuccess == true) {
+            $.ajax({
+                type: "POST",
+                data: formData,
+                url: '@Url.Action("AddFeasibility", "Feasibility")',
+                dataType: "json",
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                        console.log('final result is: ' + result);
+                        if (result.success == true) {
+                            scrollTo(0, 0);
+                        $('#postMsg').removeClass('hide');
+                        $('#postMsg').addClass('show');
+                            setTimeout(reloadScreen, 1000);
+                        }
+                    },
+                error: function (result) {
+                        console.log(result.responseText);
+                    }
+                });
+            }
+            return false;
+        });
+
+    $('#frmAddDocument').submit(function (e) {
+        e.preventDefault();
+
+        var formData = new FormData(this);
+        $.ajax({
+            url: '@Url.Action("AddDocument", "Document")',
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                $('#myAddDocModal').modal('hide');
+                $('#myDocumentContainer').html(data);
+                    setDocFlag(data);
+                },
+            error: function (data) {
+                    console.log("Error: " + data.responseText);
+                $('#myAddDocModal').modal('hide');
+                $('#myDocumentContainer').html(data);
+                }
+            });
+            return false;
+        });
+    });
+
+    function setDocFlag(data) {
+        var docTable = $('#documents')[0];
+        //console.log("docTable = " + docTable.innerText);
+        //"Documents "
+        if (docTable.innerText.length > 10) {
+            //console.log("docFlag set to true");
+            $('#docFlag').html("true");
+            $('#docMsg').addClass('info-text');
+            $('#docMsg').removeClass('ui pointing below red basic label');
+        }
+        else {
+            //console.log("docFlag set to false");
+            $('#docFlag').html("false");
+        }
+    }
+
+    function Delete(documentId, ticketNum, requestType) {
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("DeleteDocument", "Document")',
+            data: { documentID: documentId, ticketNum: ticketNum, requestType: requestType },
+            success: function (data) {
+                $('#myDocumentContainer').html(data);
+                hideDimmers();
+                setDocFlag(data);
+            }
+        })
+    }
+
+    function submitFeasibility() {
+        var docFlag = $('#docFlag').text();
+        //console.log("docFlag = " + docFlag);
+
+        if (docFlag == 'true') {
+            $('#trueFeasSubmit').click();
+            $('#docMsg').addClass('info-text');
+            $('#docMsg').removeClass('ui pointing below red basic label');
+        }
+        else {
+            $('#docMsg').removeClass('info-text');
+            $('#docMsg').addClass('ui pointing below red basic label');
+        }
+    }
+
+    function setCarrierValues(carrierInfo) {
+        $('#supportedLanguages').dropdown('clear');
+        $('#sellingModel').dropdown('clear');
+        $('#insuranceProducts').dropdown('clear');
+        $('#ipipelineProducts').dropdown('clear');
+        $('#Requests_TeamMembers').dropdown('clear');
+        $('#Requests_Director').dropdown('clear');
+
+        if (carrierInfo != '') {
+            var carrierSplit = carrierInfo.split("|");
+            var carrierId = carrierSplit[0];
+            var supportedLanguages = carrierSplit[1];
+            var sellingModel = carrierSplit[2];
+            var insuranceProducts = carrierSplit[3];
+            var ipipelineProducts = carrierSplit[4];
+            var teamMembers = carrierSplit[5];
+            var directors = carrierSplit[6];
+
+            $('#Requests_CarrierId').val(carrierId);
+            var supportedLanguagesInfo = supportedLanguages.split(",");
+            if (supportedLanguages != '') {
+                for (var i = 0; i < supportedLanguagesInfo.length; i++) {
+                    $('#supportedLanguages').dropdown('set selected', supportedLanguagesInfo[i]);
+                    $('#supportedLanguages').blur();
+                }
+            }
+
+            var sellingModelInfo = sellingModel.split(",");
+            if (sellingModel != '') {
+                for (var i = 0; i < sellingModelInfo.length; i++) {
+                    $('#sellingModel').dropdown('set selected', sellingModelInfo[i]);
+                    $('#sellingModel').blur();
+                }
+            }
+
+            var insuranceProductsInfo = insuranceProducts.split(",");
+            if (insuranceProducts != '') {
+                for (var i = 0; i < insuranceProductsInfo.length; i++) {
+                    $('#insuranceProducts').dropdown('set selected', insuranceProductsInfo[i]);
+                    $('#insuranceProducts').blur();
+                }
+            }
+
+            var ipipelineProductsInfo = ipipelineProducts.split(",");
+            if (ipipelineProducts != '') {
+                for (var i = 0; i < ipipelineProductsInfo.length; i++) {
+                    $('#ipipelineProducts').dropdown('set selected', ipipelineProductsInfo[i]);
+                    $('#ipipelineProducts').blur();
+                }
+            }
+            var teamMembers = teamMembers.split(",");
+            if (teamMembers != '') {
+                for (var i = 0; i < teamMembers.length; i++) {
+                    $('#Requests_TeamMembers').dropdown('set selected', teamMembers[i]);
+                    $('#Requests_TeamMembers').blur();
+                }
+            }
+
+            var director = directors.split(",");
+            if (director != '') {
+                for (var i = 0; i < director.length; i++) {
+                    $('#Requests_Director').dropdown('set selected', director[i]);
+                    $('#Requests_Director').blur();
+                }
+            }
+        }
+    }
+    function reloadScreen() {
+        top.location.href = '/';
+    }
+    function AddtoProjectType() {
+        var selections = $('#ProjectSelection');
+        var description = '';
+        var currentDescription = $('#Requests_ProjectType').trumbowyg('html');
+        $('#ProjectSelection > option').each(function () {
+            if (this.selected) {
+                description = currentDescription + '<b>' + this.text + '</b><hr></br></br>';
+                description = description + "<p style='color: red'><b>** Please answer the questions from the Feasibility Review Guide here! **</b></p>";
+            }
+        });
+        $('#Requests_ProjectType').trumbowyg('html', description);
+    }
+
+    function updateESigSlider(sliderText) {
+        $('#resultSlider').html(sliderText);
+        if (sliderText == 'Yes') {
+            $('#btnNo').addClass('basic');
+            $('#btnYes').removeClass('basic');
+        }
+        else if (sliderText == 'No') {
+            $('#btnYes').addClass('basic');
+            $('#btnNo').removeClass('basic');
+        }
+        else {
+            $('#btnYes').addClass('basic');
+            $('#btnNo').addClass('basic');
+        }
+        $('#Requests_eSig').val(sliderText);
+        return false;
+    }
+
+    function updateSplunkSlider(sliderText) {
+        $('#resultSplunkSlider').html(sliderText);
+        if (sliderText == 'Yes') {
+            $('#btnNo2').addClass('basic');
+            $('#btnYes2').removeClass('basic');
+        }
+        else if (sliderText == 'No') {
+            $('#btnYes2').addClass('basic');
+            $('#btnNo2').removeClass('basic');
+        }
+        else {
+            $('#btnYes2').addClass('basic');
+            $('#btnNo2').addClass('basic');
+        }
+        $('#Requests_Splunk').val(sliderText);
+        return false;
+    }
+
+</script>
+<div id="feasibilityHeader" class="ui container-fluid" style="padding:17px 5px 5px 5px">
+    <div class="ui grid">
+        <div class="ui sixteen wide column">
+            <h2 id="h2Process">Feasibility Review</h2>
+        </div>
+    </div>
+</div>
+
+<div class="se-pre-con"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Creating New Review...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+<div class="se-post-con hide" id="postMsg"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Submitting Feasability Review...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+<div id="noNewRequest" class="hide">
+    We're sorry, you cannot submit a request because your session has expired.  Please clear your cache and click <a href="https://sa-workplace.dv.ipipenet.com">here.</a>
+</div>
+<div id="newRequest">
+    <div id="feasabilityContainer" class="ui cards" style="padding:0px 10px 0px 10px">
+        <div class="ui one card fluid" style="box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; border:none !important; padding:15px 15px 15px 15px">
+            <div class="fields">
+                <div class="sixteen wide field">
+                    <div class="ui ignored info attached message">
+                        <h4>
+                            For more information, please refer to the
+                            <a href="https://ipipeline.sharepoint.com/:w:/r/sites/ProfessionalServices/professionalservicesus/PSAdmin/PS Onboarding Materials/OneIP/Feasibility Review Guide.docx?d=w714d03d7704046dbb67e229f8bf8813a&csf=1&web=1&e=XOIjgc" target="_blank"><u>Feasibility Review Guide</u></a>
+                            on SharePoint.
+                        </h4>
+                    </div>
+                    <br />
+                </div>
+            </div>
+            <form asp-action="AddFeasibilityReview" asp-controller="Feasibility" method="POST" data-ajax="true" data-ajax-update="frmAddFeasibilityReview" id="frmAddFeasibilityReview" class="ui small form">
+                <input type="hidden" id="@Html.IdFor(model => model.Requests.CarrierId)" name="@Html.NameFor(model => model.Requests.CarrierId)" />
+                <input type="hidden" id="hidSupportedLanguages" />
+                @Html.HiddenFor(model => model.Requests.TicketNumber)
+                <div class="fields">
+                    <div class="sixteen wide field">
+                        <h3 class="subHeader">Customer Overview Information</h3>
+                    </div>
+                </div>
+                <div class="three fields">
+                    <div class="five wide field">
+                        <label for="Requests_ProjectName">Project/Request Name (e.g. NGSD Conversion)</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_ProjectName" class="ui ltgray label"><i class="icon archive md"></i></label>
+                            <input type="text" id="@Html.IdFor(model => model.Requests.ProjectName)" name="@Html.NameFor(model => model.Requests.ProjectName)" autocomplete="off" data-validate="ProjectName" />
+                        </div>
+                    </div>
+                    <div class="five wide field">
+                        <label for="Requests_CarrierId">Carrier</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_Carriers" class="ui ltgray label"><i class="icon building md"></i></label>
+                            <select id="Carriers" name="Carriers" class="ui fluid dropdown" onchange="javascript:setCarrierValues(this.value);" data-validate="Carriers">
+                                <option value=""></option>
+                                @{
+                                    foreach (var carrier in Model.Carriers)
+                                    {
+                                        <option value="@carrier.CarrierId|@carrier.SupportedLanguages|@carrier.SellingModel|@carrier.InsuranceProducts|@carrier.iPipelineProducts|@carrier.TeamMembers|@carrier.Director">@carrier.CarrierName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="five wide field">
+                        <label for="supportedLanguages">Supported Languages</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="supportedLanguages" class="ui ltgray label"><i class="icon globe md"></i></label>
+                            <select id="supportedLanguages" name="supportedLanguages" class="ui fluid search dropdown" multiple="" data-validate="supportedLanguages">
+                                <option value="English">English</option>
+                                <option value="French">French</option>
+                                <option value="Spanish">Spanish</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="three fields">
+                    <div class="five wide field">
+                        <label for="SellingModel" class="col-form-label-sm">Selling Model (e.g. distributor, captured, DTC, etc.)</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="sellingModel" class="ui ltgray label"><i class="icon balance scale md"></i></label>
+                            <select id="sellingModel" name="sellingModel" class="ui fluid search dropdown" multiple="" data-validate="sellingModel">
+                                <option value="Captive">Captive</option>
+                                <option value="Distribution">Distribution</option>
+                                <option value="DTC">DTC</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="five wide field">
+                        <label for="insuranceProducts">List the current insurance products offered by the customer</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="insuranceProducts" class="ui ltgray label"><i class="icon handshake md"></i></label>
+                            <select id="insuranceProducts" name="insuranceProducts" class="ui fluid search dropdown" multiple="multiple" data-validate="insuranceProducts">
+                                <option value="Term">Term</option>
+                                <option value="IUL">IUL</option>
+                                <option value="UL">UL</option>
+                                <option value="WL">WL</option>
+                                <option value="Annuity">Annuity</option>
+                                <option value="MedSupp">MedSupp</option>
+                                <option value="LTC">LTC</option>
+                                <option value="DI">DI</option>
+                                <option value="FinalExpense">Final Expense</option>
+                                <option value="WorkSite">WorkSite</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="five wide field">
+                        <label for="ipipelineProducts">List the current iPipeline products used by this customer</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="ipipelineProducts" class="ui ltgray label"><i class="icon cart plus md"></i></label>
+                            <select id="ipipelineProducts" name="ipipelineProducts" class="ui fluid search dropdown" multiple="" data-validate="ipipelineProducts">
+                                <option value="AgentOne">AgentOne</option>
+                                <option value="iGO">iGO</option>
+                                <option value="Illustrations">Illustrations</option>
+                                <option value="NeedsAnalysis">Needs Analysis</option>
+                                <option value="AdvancedSales">Advanced Sales</option>
+                                <option value="PAS">PAS</option>
+                                <option value="DocFast">DocFast</option>
+                                <option value="Resonant">Resonant</option>
+                                <option value="ClientCollaboration">Client Collaboration</option>
+                                <option value="PHS">PHS</option>
+                                <option value="DTC">DTC</option>
+                                <option value="LifePipe">LifePipe</option>
+                                <option value="SiteCore">SiteCore</option>
+                                <option value="XRae">XRae</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="fields">
+                    <div class="sixteen wide field">
+                        <h3 class="subHeader">Project Overview Information</h3>
+                    </div>
+                </div>
+                <div class="three fields">
+                    <div class="five wide field">
+                        <label for="Requests_OpportunityNameNumber">SOW, CR or Opportunity Name or Number</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_OpportunityNameNumber" class="ui ltgray label"><i class="icon file md"></i></label>
+                            <input type="text" name="@Html.NameFor(model => model.Requests.OpportunityNameNumber)" id="@Html.IdFor(model => model.Requests.OpportunityNameNumber)" autocomplete="off" data-validate="OpportunityNameNumber" />
+                        </div>
+                    </div>
+                    <div class="five wide field">
+                        <label for="Requests_ProjectorCode">Projector Code</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_ProjectorCode" class="ui ltgray label"><i class="icon barcode md"></i></label>
+                            <input type="text" name="@Html.NameFor(model => model.Requests.ProjectorCode)" id="@Html.IdFor(model => model.Requests.ProjectorCode)" autocomplete="off" data-validate="ProjectorCode" />
+                        </div>
+                    </div>
+                    <div class="five wide field">
+                        <label for="Requests_Technology">Technology</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_Technology" class="ui ltgray label"><i class="icon microchip md"></i></label>
+                            <select id="@Html.IdFor(model => model.Requests.Technology)" name="@Html.NameFor(model => model.Requests.Technology)" class="ui fluid search dropdown" multiple="" data-validate="Technology">
+                                <optgroup label="Screen Designer Type">
+                                    <option value="NGSD">NGSD</option>
+                                    <option value="CSD">CSD (Classic)</option>
+                                </optgroup>
+                                <optgroup label="Scripting Type">
+                                    <option value="NET">.NET</option>
+                                    <option value="JavaScript">JavaScript</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="three fields">
+                    <div class="five wide field">
+                        <label for="Requests_RequestReviewDate">Expected PROD Date</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_FeasibilityReviewDate" class="ui ltgray label"><i class="icon calendar md"></i></label>
+                            <input type="text" name="@Html.NameFor(model => model.Requests.FeasProdDate)" id="dcRequestReviewDate" autocomplete="off" data-validate="RequestReviewDate" />
+                            @Html.HiddenFor(model => model.Requests.RequestReviewDate)
+                        </div>
+                    </div>
+                    <div class="five wide field">
+                        <label for="Requests_Members">Team Members</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_TeamMembers" class="ui ltgray label"><i class="icon users md"></i></label>
+                            <select id="Requests_TeamMembers" name="Requests_TeamMembers" class="ui fluid search dropdown" multiple="" data-validate="TeamMembers">
+                                <option value=""></option>
+                                @{
+                                    foreach (var tm in Model.TeamMembers)
+                                    {
+                                        <option value="@tm.UserId:@tm.EmailAddress:@tm.UserName">@tm.UserName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="five wide field">
+                        <label for="Requests_Director">Director</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_Director" class="ui ltgray label"><i class="icon users md"></i></label>
+                            <select id="Requests_Director" name="Requests_Director" class="ui fluid search dropdown" multiple="" data-validate="Director">
+                                <option value=""></option>
+                                @{
+                                    foreach (var dr in Model.Director)
+                                    {
+                                        <option value="@dr.UserId:@dr.EmailAddress:@dr.UserName">@dr.UserName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="three fields">
+                    <div class="five wide field">
+                        <label>New eSignature Implementation? (AlphaTrust or DocuSign)</label>
+                        <div class="ui buttons">
+                            <button type="button" class="ui button basic blue deny" id="btnYes" onclick="updateESigSlider('Yes');">Yes</button>
+                            <div class="or" onclick="updateESigSlider('');"></div>
+                            <button type="button" class="ui button basic gray deny" id="btnNo" onclick="updateESigSlider('No');">No</button>
+                        </div>
+                        <div id="resultSlider" class="hide"></div>
+                        @Html.HiddenFor(model => model.Requests.eSig)
+
+                        <br /><br />
+                        <label>Does the Developer need Splunk Training?</label>
+                        <div class="ui buttons">
+                            <button type="button" class="ui button basic blue deny" id="btnYes2" onclick="updateSplunkSlider('Yes');">Yes</button>
+                            <div class="or" onclick="updateSplunkSlider('');"></div>
+                            <button type="button" class="ui button basic gray deny" id="btnNo2" onclick="updateSplunkSlider('No');">No</button>
+                        </div>
+                        <div id="resultSplunkSlider" class="hide"></div>
+                        @Html.HiddenFor(model => model.Requests.Splunk)
+
+                    </div>
+                    <div class="five wide field">
+                        <label for="Requests_BusinessRequirement">Business Objective/Requirements</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_Requirements" class="ui ltgray label"><i class="icon copy md"></i></label>
+                            <textarea id="@Html.IdFor(model => model.Requests.Requirements)" name="@Html.NameFor(model => model.Requests.Requirements)" cols="2" rows="4" autocomplete="off" data-validate="Requirements"></textarea>
+                        </div>
+                    </div>
+                    <div class="five wide field">
+                        <label for="Requests_SpecialChallenge">Risks/Special Challenges</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_SpecialChallenge" class="ui ltgray label"><i class="icon wheelchair md"></i></label>
+                            <textarea id="@Html.IdFor(model => model.Requests.SpecialChallenge)" name="@Html.NameFor(model => model.Requests.SpecialChallenge)" cols="2" rows="4" autocomplete="off"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="two fields">
+                    <div class="five wide field">
+                        <label for="Requests_CarrierId">Type of Work</label>
+                        <div class="ui labeled input" style="max-width:96%">
+                            <label for="Requests_ProjectSelection" class="ui ltgray label"><i class="icon industry md"></i></label>
+                            <select id="ProjectSelection" name="ProjectSelection" multiple="multiple" class="ui fluid search dropdown" onchange="AddtoProjectType();" data-validate="ProjectSelection">
+                                <option value="NewLogo">New Logo (new carrier to iPipeline)</option>
+                                <option value="NewProduct">New Type of Product</option>
+                                <option value="NewApp">New iPipeline Product</option>
+                                <option value="NewIntegration">New Integration</option>
+                                <option value="NewReg">New Business Regulation</option>
+                                <option value="NewFeature">Adding New Features</option>
+                                <option value="NewFlow">New or Altered Screen Flow</option>
+                                <option value="Other">Other Additions</option>
+                            </select>
+                        </div>
+                        <br /><br />
+                        <div class="ui ignored info attached message">
+                            <h4>
+                                Please refer to the
+                                <a href="https://ipipeline.sharepoint.com/:w:/r/sites/ProfessionalServices/professionalservicesus/PSAdmin/PS Onboarding Materials/OneIP/Feasibility Review Guide.docx?d=w714d03d7704046dbb67e229f8bf8813a&csf=1&web=1&e=XOIjgc" target="_blank"><u>Feasibility Review Guide</u></a>
+                                - <i>How do I collect the necessary information for the ticket?</i>&nbsp;&nbsp; Use the required questions to fill out the section on the right.
+                            </h4>
+                        </div>
+                    </div>
+
+                    <div class="ten wide field">
+                        <label for="Requests_ProjectType">Please add descriptions to the selections made on the left</label>
+                        <textarea id="@Html.IdFor(model => model.Requests.ProjectType)" name="@Html.NameFor(model => model.Requests.ProjectType)" autocomplete="off"></textarea>
+                    </div>
+                </div>
+                <div id="docFlag" class="hide"></div>
+                <input type="submit" id="trueFeasSubmit" style="visibility:hidden" />
+            </form>
+            <div class="field">
+                <div class="sixteen wide field">
+                    <h4 class="subHeader">Documents</h4><span id="docMsg" class="info-text">Please include workflows, SOW/CR or any other documentation pertaining to the request.</span>
+                    <div class="sixteen wide field" id="myDocumentContainer">
+                        @{
+                            DocumentDisplayModel documentModel = new DocumentDisplayModel();
+                            documentModel.Documents = Model.Documents;
+                            documentModel.TicketNumber = Model.Requests.TicketNumber;
+                            documentModel.RequestType = 6;
+                            await Html.RenderPartialAsync("/Views/Partial/Documents.cshtml", documentModel);
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <div class="sixteen wide field">
+                    <hr /><br />
+                    <button type="button" id="btnSubmitFeasibility" value="SubmitRequest" class="ui positive basic button" onclick="submitFeasibility()">Submit Request</button>
+                    <button type="button" value="Cancel" class="ui negative basic button" onclick="top.location.href='/'">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="ui small modal" id="myDeleteModal" aria-labelledby="myDeleteModal" aria-hidden="true">
+        <div class="header inverted" style="background-color:black">
+            <div class="ui grid">
+                <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Delete Document</h3></div>
+            </div>
+        </div>
+        <div class="content">
+            <p style="margin:10px 10px 20px 10px"><label id="lblMessage" style="color:red;"></label></p>
+        </div>
+        <div class="actions">
+            <button type="button" class="ui basic button close" onclick="CloseDeleteModal()">Cancel</button>
+            <button type="button" class="ui basic button deny negative">Delete Document!</button>
+        </div>
+    </div>
+
+    <div class="ui small modal" id="myAddDocModal" aria-labelledby="myAddDocModal" aria-hidden="true">
+        <div class="header inverted" style="background-color:black">
+            <h3 id="modalTitle" style="color:white">Add Document</h3>
+        </div>
+        <div class="content">
+            <form asp-action="AddDocument" asp-controller="Document" method="POST" class="ui small form" id="frmAddDocument">
+                <div class="modal-body" id="PreviewAddDoc">
+                    PartialView
+                </div>
+            </form>
+        </div>
+        <div class="actions">
+            <button type="button" class="ui basic button close" onclick="CloseAddModal()">Cancel</button>
+            <button type="button" class="ui basic button approved positive">Add Document!</button>
+        </div>
+    </div>
+    @*<script>
+
+            $(document).ready(function () {
+                $('#topheader .navbar-nav').find('li.active').removeClass('active');
+                $('#navHome').addClass('active');
+            });
+            $('.childDiv').click(function () {
+                $(this).parent().find('.childDiv').css('border', 'none');
+                $(this).css('border', 'solid 2px #5bc0eb');
+            });
+        </script>*@

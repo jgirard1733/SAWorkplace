@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SA_OKTA_API</name>
+    </assembly>
+    <members>
+        <member name="T:SA_OKTA_API.ActionFilters.ValidationFilterAttribute">
+            <summary>
+            Used to check if the ModelState (object passed to the API) is valid.
+            For more information look at https://docs.microsoft.com/en-us/aspnet/web-api/overview/formats-and-model-binding/model-validation-in-aspnet-web-api
+            </summary>
+        </member>
+        <member name="M:SA_OKTA_API.ActionFilters.ValidationFilterAttribute.OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext)">
+            <summary>
+            Like name suggests, called when action is being executed.  This is where we check if the ModelState is valid. 
+            </summary>
+            <param name="context"></param>
+        </member>
+        <member name="M:SA_OKTA_API.ActionFilters.ValidationFilterAttribute.OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext)">
+            <summary>
+            Not used in this example, but can be used to perform actions after action was executed.
+            </summary>
+            <param name="context"></param>
+        </member>
+        <member name="T:SA_OKTA_API.Contracts.ISAOktaRepository">
+            <summary>
+            Interface for DEMOController.cs that defines the methods available for the project.
+            </summary>
+            <remarks>
+            Your project will have a class that inherits from this interface in the Repositories directory, so you need to make sure both are in sync.
+            </remarks>
+        </member>
+        <member name="M:SA_OKTA_API.Contracts.ISAOktaRepository.UpdateOktaUsers">
+            <summary>
+            Gets a specific customer from a JSON file.
+            </summary>
+            <param name="id"></param>
+            <returns>
+            A single customer
+            </returns>
+        </member>
+        <member name="T:SA_OKTA_API.Controllers.SAOktaController">
+            <summary>
+            Used for calling OKTA APIs.  Currently only used for getting latest list of Okta users for iPipeline.
+            </summary>
+        </member>
+        <member name="M:SA_OKTA_API.Controllers.SAOktaController.#ctor(SA_OKTA_API.Contracts.ISAOktaRepository)">
+            <summary>
+            Constructor that creates an instance of the API interface.
+            </summary>
+        </member>
+        <member name="M:SA_OKTA_API.Controllers.SAOktaController.Get">
+            <summary>
+            Triggers the API to make a call to OKTA for getting latest list of users and updating a DB.
+            Does not return user list, just an OK string.  
+            </summary>
+            <returns>"OK"</returns>
+            <response code="200">Returns string "OK".</response>
+            <response code="500">OH NO! Something went wrong.</response>
+        </member>
+        <member name="T:SA_OKTA_API.CustomLoggingMiddleware.LoggingMiddleware">
+            <summary>
+            Provides a Correlation ID and custom exception handler.
+            Uses <see cref="N:LoggerService"/> for the log manager.
+            </summary>
+        </member>
+        <member name="T:SA_OKTA_API.Extensions.ExceptionMiddlewareExtensions">
+            <summary>
+            Global error handler.
+            See https://code-maze.com/global-error-handling-aspnetcore/ for more details
+            </summary>
+        </member>
+        <member name="T:SA_OKTA_API.Repositories.SAOktaRepository">
+            <summary>
+            This is the main class that handles all your project's logic.
+            You can find examples of how to parse JSON, write to logs, read from the config and decrypt your UN/PW.
+            </summary>
+        </member>
+        <member name="M:SA_OKTA_API.Repositories.SAOktaRepository.#ctor(SAWorkplace.Data.ApplicationDBContext,LoggerService.ILoggerManager,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            This is the consrtuctor for the DEMORepository.
+            </summary>
+            <param name="logger">The logger (NLog) is being injected at the time of creation.</param>
+            <param name="config">The config (appsettings.json) is being injected at the time of creation.</param>
+        </member>
+        <member name="M:SA_OKTA_API.Repositories.SAOktaRepository.UpdateOktaUsers">
+            <summary>
+            This example shows how to pull a value from the <c>_config</c> object created from the appsettings.json
+            </summary>
+            <param name="customer"></param>
+            <returns></returns>
+        </member>
+        <member name="T:InternalItems.Controllers.ErrorsController">
+            <summary>
+            Error controller class that will handle returning our standard error message when accessing a URI that doesnt exist.
+            !!!SHOULD NOT NEED TO EDIT THIS!!!
+            </summary>
+        </member>
+        <member name="M:InternalItems.Controllers.ErrorsController.Error(System.Int32)">
+            <summary>
+            The action that actually sends the resulting error back.
+            </summary>
+        </member>
+        <member name="T:InternalItems.Models.ApiInformation">
+            <summary>
+            Matches Swaggers SwaggerDoc model.
+            SHOULD NOT NEED TO UPDATE THIS!
+            </summary>
+        </member>
+        <member name="T:InternalItems.Models.BadRequestError">
+            <summary>
+            Used when we have a 400 error like in <see cref="T:SA_OKTA_API.ActionFilters.ValidationFilterAttribute"/>
+            !!!SHOULD NOT NEED TO UPDATE THIS!!!
+            </summary>
+        </member>
+        <member name="T:InternalItems.Models.ErrorDetails">
+            <summary>
+            Generic Error Object to pass back when an error occurs.
+            !!!SHOULD NOT NEED TO UPDATE THIS!!!
+            </summary>
+        </member>
+        <member name="P:InternalItems.Models.ErrorDetails.StatusCode">
+            <summary>
+            HTTP Status code.
+            </summary>
+        </member>
+        <member name="P:InternalItems.Models.ErrorDetails.CorrelationID">
+            <summary>
+            Unique identifier that is added to log entries in <see cref="T:SA_OKTA_API.CustomLoggingMiddleware.LoggingMiddleware"/>.
+            This will make it easy to query entries specific to the error in SPLUNK and the logs.
+            </summary>
+        </member>
+        <member name="P:InternalItems.Models.ErrorDetails.StatusDescription">
+            <summary>
+            Status Description
+            </summary>
+        </member>
+        <member name="P:InternalItems.Models.ErrorDetails.Message">
+            <summary>
+            Exception message.
+            </summary>
+        </member>
+        <member name="M:InternalItems.Models.ErrorDetails.ToString">
+            <summary>
+            This is needed to send the ErrorDetails object as a JSON object and not a string of the object type.
+            </summary>
+        </member>
+        <member name="T:InternalItems.Models.InternalServerError">
+            <summary>
+            Used when we have a 500 error like in like in <see cref="T:SA_OKTA_API.CustomLoggingMiddleware.LoggingMiddleware"/> and <see cref="T:SA_OKTA_API.Extensions.ExceptionMiddlewareExtensions"/>
+            !!!SHOULD NOT NEED TO UPDATE THIS!!!
+            </summary>
+        </member>
+        <member name="T:InternalItems.Models.NotFoundError">
+            <summary>
+            Used when we have a 404 error like in <see cref="!:SA_OKTA_API.Controllers.SAOktaController.Get(int)"/>
+            !!!SHOULD NOT NEED TO UPDATE THIS!!!
+            </summary>
+        </member>
+    </members>
+</doc>

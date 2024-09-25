@@ -1,2 +1,2 @@
 # SAWorkplace
-Software tool for the PS Solution Arch Group
+A Dashboad style interface for ticketing.  Specializing in Solution Architecture type requests.

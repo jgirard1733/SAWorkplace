@@ -1,0 +1,139 @@
+﻿@model SAWorkplace.Models.RequestEditModel
+@using System.Text.RegularExpressions
+
+<script>
+    $(document).ready(function () {
+        $(".se-pre-con").fadeOut("slow");
+    });
+</script>
+
+<div class="se-pre-con"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Creating New Request...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+<div id="feasabilityContainer">
+    <div class="row">
+        <div class="form-group col-12">
+            <h4 class="subHeader">Customer Overview Information</h4>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-4">
+            <label for="Requests_ProjectName" class="col-form-label-sm">Project/Request Name</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">class</i></span>
+                </div>
+                @Html.EditorFor(model => model.Requests.ProjectName, new { htmlAttributes = new { @class = "form-control", required = "required", autocomplete = "off" } })
+                <span class="icon-validation" data-icon="&#xe000"></span>
+            </div>
+        </div>
+        <div class="form-group col-4">
+            <label for="Requests_CarrierId" class="col-form-label-sm">Carrier</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">account_balance</i></span>
+                </div>
+                @Html.DropDownListFor(model => model.Requests.CarrierId, new SelectList(Model.Carriers, "CarrierId", "CarrierName"), "--Choose Carrier--", new { @class = "form-control", required = "required", autocomplete = "off" })
+            </div>
+        </div>
+        <div class="form-group col-4">
+            <label for="Requests_CarrierLanguages" class="col-form-label-sm">Suported Languages</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">class</i></span>
+                </div>
+                <span class="icon-validation" data-icon="&#xe000"></span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-4">
+            <label for="Requests_SellingModel" class="col-form-label-sm">Selling Model (e.g. distributor, captured, DTC, etc.)</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">class</i></span>
+                </div>
+                <span class="icon-validation" data-icon="&#xe000"></span>
+            </div>
+        </div>
+        <div class="form-group col-4">
+            <label for="Requests_SellingModel" class="col-form-label-sm">List the current insurance products offered by the customer</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">class</i></span>
+                </div>
+                <span class="icon-validation" data-icon="&#xe000"></span>
+            </div>
+            <div class="form-group col-4">
+
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-12">
+            <h4 class="subHeader">Project Overview Information</h4>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-4">
+            <label for="Requests_ProjectName" class="col-form-label-sm">SOW, CR or Opportunity Name or Number</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">class</i></span>
+                </div>
+                <span class="icon-validation" data-icon="&#xe000"></span>
+            </div>
+        </div>
+        <div class="form-group col-4">
+            <label for="Requests_CarrierId" class="col-form-label-sm">Business Objective/Requirements</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">account_balance</i></span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-4">
+            <label for="Requests_CarrierLanguages" class="col-form-label-sm">Special Challenges</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">class</i></span>
+                </div>
+                <span class="icon-validation" data-icon="&#xe000"></span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-4">
+            <label for="Requests_ProjectName" class="col-form-label-sm">Technology</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">class</i></span>
+                </div>
+                <span class="icon-validation" data-icon="&#xe000"></span>
+            </div>
+        </div>
+        <div class="form-group col-4">
+            <label for="Requests_CarrierId" class="col-form-label-sm">Project Type</label>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">account_balance</i></span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group col-4">
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-12">
+            <h4 class="subHeader">Documents</h4>
+            <div class="col-8" id="myDocumentContainer">
+                @{
+                    DocumentDisplayModel documentModel = new DocumentDisplayModel();
+                    documentModel.Documents = Model.Documents;
+                    documentModel.TicketNumber = Model.Requests.TicketNumber;
+                    documentModel.RequestType = Model.Requests.RequestType;
+                    await Html.RenderPartialAsync("/Views/Partial/Documents.cshtml", documentModel);
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,95 +1,98 @@
-﻿@using System.DirectoryServices.AccountManagement
-@using System.DirectoryServices
-@using System.Security.Claims
+﻿
+@using Microsoft.AspNetCore.Http;
+
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
 <head>
+    <title>SA Workplace</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="~/css/bootstrap-reboot.min.css">
-    <link rel="stylesheet" href="~/css/bootstrap.min.css" />
+    <link href="~/lib/semanticUI/semantic.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/site.css" />
-    <link rel="stylesheet" href="~/css/dd.css" />
-    <link rel="stylesheet" href="~/css/trumbowyg.min.css" />
-    <link rel="stylesheet" href="~/css/jquery.datetimepicker.css" />
-    @*<link rel="stylesheet" href="~/css/trumbowyg.colors.css" />*@
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-    <script src="/js/jquery.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <link rel="apple-touch-icon" sizes="180x180" href="~/img/apple-touch-icon.png">
+    <link rel="icon" id="favicon" type="image/png" sizes="16x16" href="~/img/favicon-16x16.png">
+    <link rel="manifest" href="~/manifest.json" crossorigin="use-credentials">
 </head>
 <body style="background-color:#f7f7f7">
-    <nav class="navbar navbar-dark bg-dark shadow navbar-expand-sm" id="topheader">
-        <a class="navbar-brand" href="#">
-            <img src="~/img/logo.png" width="31" height="39" class="d-inline-block align-top" alt=""> SA Workplace
-        </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
-            <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-                <li class="nav-item" id="navHome">
-                    <a class="nav-link" href="#">Requests</a>
-                </li>
-                <li class="nav-item" id="navAll">
-                    <a class="nav-link" href="#">Allocation</a>
-                </li>
-            </ul>
-        </div>
-        @{
-            var userName = "";
-            try
-            {
-                using (var context = new PrincipalContext(ContextType.Domain, "CORP"))
+    <div class="ui container-fluid">
+        <div class="row">
+            <div class="ui large inverted pointing menu" id="topheader" style="padding:0px 10px 0px 10px">
+                <a class="ui item" href="/">
+                    <img src="~/img/logo.png" width="31" height="39" class="d-inline-block align-top" alt=""><span style="font-size:18px;margin-left:10px">SA Workplace</span>
+                </a>
+                <a id="requestTop" class="item active" asp-controller="Request" asp-action="Index">Requests</a>
+                <a id="allocationTop" class="item" asp-controller="Allocation" asp-action="Index">Allocation</a>
+
+                @if (User.Identity.IsAuthenticated)
                 {
-                    var SA = UserPrincipal.FindByIdentity(context, Context.User.Identity.Name);
-                    if (SA != null)
+                    var userName = "";
+                    var PSArchitect = "";
+                    var ECUser = "";
+                    var viewType = "";
+                    try
                     {
-                        userName = string.Format("{0} {1}", SA.GivenName, SA.Surname);
+                        userName = Context.Session.GetString("UserName");
+                        PSArchitect = Context.Session.GetString("PSArchitect");
+                        ECUser = Context.Session.GetString("ECUser");
+                        viewType = Context.Session.GetString("ViewType");
                     }
-                }
-            }
-            catch { userName = "Unknown User"; }
-        }
-        <div class="text-right">
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
-                        @userName
-                    </a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#">Link 1</a>
+                    catch { userName = "Unknown User"; PSArchitect = "False"; }
+                    <div class="ui simple dropdown right aligned item">
+                        @if (PSArchitect == "True" || ECUser == "True")
+                        {
+                            <span class="text-white"><i>(@viewType View)</i>&nbsp;</span>
+                        }
+                        <span style="color:gray; margin-left:8px">@userName</span>
+                        <i class="dropdown icon"></i>
+                        @{
+                            if (PSArchitect == "True")
+                            {
+                                <div class="menu">
+                                    <a class="item" asp-controller="Request" asp-action="Index" asp-route-viewType="Admin">Admin View</a>
+                                    <a class="item" asp-controller="Request" asp-action="Index" asp-route-viewType="EC">EC View</a>
+                                    <a class="item" asp-controller="Request" asp-action="Index" asp-route-viewType="User">User View</a>
+                                </div>
+                            }
+                        }
+                        @{
+                            if (ECUser == "True")
+                            {
+                                <div class="menu">
+                                    <a class="item" asp-controller="Request" asp-action="Index" asp-route-viewType="EC">EC View</a>
+                                    <a class="item" asp-controller="Request" asp-action="Index" asp-route-viewType="User">User View</a>
+                                </div>
+                            }
+                        }
                     </div>
-                </li>
-            </ul>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="SignIn">Sign In</a>
+                }
+            </div>
         </div>
-    </nav>
-    <br />
-    <div class="container-fluid">
-        <main role="main" class="pb-3" id="main" name="main">
-            @RenderBody()
-        </main>
+        @RenderBody()
+        <br />
+        <hr />
+        <div class="ui container sub header center  aligned">
+            &copy; 2020 - iPipeline SA Workplace
+        </div>
+
+        <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+        <script src="~/js/site.js"></script>
+        <script src="~/lib/semanticUI/semantic.min.js"></script>
+        <script>
+            $('#topheader .mt-lg-0 a').on('click', function () {
+                $('#topheader .mt-lg-0').find('li.active').removeClass('active');
+                $(this).parent('li').addClass('active');
+            });
+
+            function setAllocActive() {
+                $('#requestTop').removeClass('active');
+                $('#allocationTop').addClass('active');
+            }
+        </script>
     </div>
-    <br />
-    <footer class="border-top footer text-muted col-md-12">
-        <div class="container-fluid" style="align-content:center">
-            &copy; 2019 - iPipline SA Workplace
-        </div>
-    </footer>
-    <script src="~/js/popper.js"></script>
-    <script src="~/js/modernizr.js"></script>
-    <script src="/js/jquery-ui.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/validator.js"></script>
-    <script src="~/js/bootstrap-select.js"></script>
-    <script src="~/js/msdropdown.min.js"></script>
-    <script src="~/js/trumbowyg.min.js"></script>
-    <script src="~/js/jquery.datetimepicker.js"></script>
-    <script src="~/js/trumbowyg.colors.min.js"></script>
-    <script>
-        $('#topheader .mt-lg-0 a').on('click', function () {
-            $('#topheader .mt-lg-0').find('li.active').removeClass('active');
-            $(this).parent('li').addClass('active');
-        });
-    </script>
 </body>
 </html>

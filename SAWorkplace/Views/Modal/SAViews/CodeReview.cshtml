@@ -1,0 +1,290 @@
+﻿@model SAWorkplace.Models.RequestEditModel
+@using System.Text.RegularExpressions;
+@using Microsoft.AspNetCore.Http;
+
+<script>
+    $(document).ready(function () {
+         var SA = '@Model.Requests.AssignedSA';
+
+        $('#SADropDown').dropdown({
+            onChange: function (text, value) {
+                var SAName = $('#Requests_AssignedSAName');
+                var SAEmail = $('#Requests_AssignedSAEmail');
+
+                if (text == 'jgirard') {
+                    SAName.val('Jim Girard');
+                    SAEmail.val('jgirard@ipipeline.com');
+                }
+                else if (text == 'mcain') {
+                    SAName.val('Matt Cain');
+                    SAEmail.val('mcain@ipipeline.com');
+                }
+                else if (text == 'dolsen') {
+                    SAName.val('Darnae Olsen');
+                    SAEmail.val('dolsen@ipipeline.com');
+                }
+            }
+        }).dropdown('set selected', SA);
+        $('#Requests_RequestType').dropdown();
+
+        if (@Model.Requests.RequestStatus == '10') {
+            $('#pass_toggle').prop("checked", true);
+            $('#no_toggle').prop("checked", false);
+            updateSlider('Pass');
+        }
+        else if (@Model.Requests.RequestStatus == '9') {
+            $('#fail_toggle').prop("checked", true);
+            $('#no_toggle').prop("checked", false);
+            updateSlider('Fail');
+        }
+    });
+
+    function setMoveButton() {
+        return false;
+    }
+
+    function updateSlider(sliderText) {
+        $('#resultSlider').html(sliderText);
+        if (sliderText == 'Pass') {
+            $('#btnFail').addClass('basic');
+            $('#btnPass').removeClass('basic');
+        }
+        else if (sliderText == 'Fail') {
+            $('#btnPass').addClass('basic');
+            $('#btnFail').removeClass('basic');
+        }
+        else {
+            $('#btnPass').addClass('basic');
+            $('#btnFail').addClass('basic');
+        }
+        $('#reviewStatus').val(sliderText);
+        return false;
+    }
+
+    $('#frmUpdateCodeReview').submit(function (e) {
+        var formData = new FormData(this);
+
+        $.ajax({
+            url: '@Url.Action("CodeReview", "SARequest")',
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (result) {
+                if (result.success == true) {
+                    $('#myCodeReviewModal').modal('hide');
+                     window.location.reload();
+                }
+            },
+            error: function (result) {
+                console.log(result.responseText);
+            }
+        });
+        e.preventDefault();
+    });
+
+    $('#frmAddDocument').submit(function (e) {
+        e.preventDefault();
+
+        var formData = new FormData(this);
+        $.ajax({
+            url: '@Url.Action("AddDocument", "Document")',
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                hideDimmers();
+                $('#myAddDocModal').modal('hide');
+                $('#myDocumentContainer').html(data);
+                setMoveButton(data);
+            },
+            error: function (data) {
+                console.log("Error: " + data.responseText);
+                $('#myAddDocModal').modal('hide');
+                $('#myDocumentContainer').html(data);
+            }
+        });
+        return false;
+    });
+
+    function Delete(documentId, ticketNum, requestType) {
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("DeleteDocument", "Document")',
+            data: { documentID: documentId, ticketNum: ticketNum, requestType: requestType },
+            success: function (data) {
+                $('#myDocumentContainer').html(data);
+                hideDimmers();
+                setMoveButton(data);
+            }
+        })
+    }
+</script>
+
+@Html.HiddenFor(model => model.Requests.RequestId)
+@Html.HiddenFor(model => model.Requests.RequestDate)
+@Html.HiddenFor(model => model.Requests.TicketNumber)
+@Html.HiddenFor(model => model.Requests.CarrierId)
+@Html.HiddenFor(model => model.Requests.CarrierName)
+@Html.HiddenFor(model => model.Requests.ProjectName)
+@Html.HiddenFor(model => model.Requests.ProjectorCode)
+@Html.HiddenFor(model => model.Requests.TFSPath)
+@Html.HiddenFor(model => model.Requests.RequestorName)
+@Html.HiddenFor(model => model.Requests.RequestorEmail)
+@Html.HiddenFor(model => model.Requests.RequestStatus)
+@Html.HiddenFor(model => model.Requests.ProgressType)
+@Html.HiddenFor(model => model.Requests.RequestDesc)
+@Html.HiddenFor(model => model.Requests.RequestReviewDate)
+@Html.HiddenFor(model => model.Requests.Requestor)
+
+<div class="row" id="UpdateCodeReviewContainer" style="margin: 5px 5px 5px 5px">
+    <div class="fields">
+        <div class="sixteen wide field">
+            @Model.Requests.ProjectName - <b>@Model.Requests.CarrierName</b>
+        </div>
+    </div>
+    <div class="two fields">
+        <div class="eight wide field">
+            <div>
+                <b>Location: </b>@Model.Requests.TFSPath
+            </div>
+            <br />
+            <div>
+                <b>Projector Code: </b>@Model.Requests.ProjectorCode
+            </div>
+            <br />
+            <div>
+                <b>Requested on: </b>@Model.Requests.RequestDate
+            </div>
+            <br />
+            <div>
+                <b>Review by Date: </b>@Model.Requests.RequestReviewDate.Value.ToShortDateString()
+            </div>
+            <br />
+            <div>
+                <b>Submitted By: </b>@Model.Requests.RequestorName
+            </div>
+        </div>
+        <div class="eight wide field">
+            <label id="lblComment"><u>Comments</u></label>
+            <table width="100%" border="0">
+                @{
+                    foreach (var comment in Model.History)
+                    {
+                        <tr>
+                            <td class="info-text"><b><font color="blue">@comment.AddedBy</font></b>: @Html.Raw(comment.History) - <span style="font-size:xx-small !important">@comment.AddDateTime</span></td>
+                        </tr>
+                    }
+                }
+            </table>
+
+            <div class="ui labeled input">
+                <label for="newComment" class="ui ltgray label"><i class="icon comment alternate"></i></label>
+                <textarea id="newComment" name="newComment" placeholder="Add Comment" width="100%" spellcheck="true" style="max-width:500px" cols="2" rows="3"></textarea>
+            </div>
+        </div>
+    </div>
+    <hr />
+    <div class="two fields">
+        <div class="eight wide field">
+            <label for="Requests_AssignedSA">Assigned SA</label>
+            <div class="ui labeled input">
+                <label for="Requests_StatusType" class="ui ltgray label"><i class="icon user md"></i></label>
+                <div class="ui fluid selection dropdown" id="SADropDown" style="width:80%">
+                    <input type="hidden" name="@Html.NameFor(x => x.Requests.AssignedSA)" id="@Html.IdFor(x => x.Requests.AssignedSA)">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">--Assign to SA--</div>
+                    <div class="menu">
+                        <div class="item" data-value="mcain">
+                            <img class="ui mini avatar image" src="/img/PersonPlaceholder_sm.png">
+                            Matt Cain
+                        </div>
+                        <div class="item" data-value="jgirard">
+                            <img class="ui mini avatar image" src="/img/PersonPlaceholder_sm.png">
+                            Jim Girard
+                        </div>
+                        <div class="item" data-value="dolsen">
+                            <img class="ui mini avatar image" src="/img/PersonPlaceholder_sm.png">
+                            Darnae Olsen
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @*@Html.HiddenFor(model => model.Requests.AssignedSA)*@
+            @Html.HiddenFor(model => model.Requests.AssignedSAEmail)
+            @Html.HiddenFor(model => model.Requests.AssignedSAName)
+
+            <br /><br />
+            <label for="Requests_RequestType">Request Type</label>
+            <div class="ui labeled input" style="width:90% !important">
+                <label for="Requests_RequestType" class="ui ltgray label"><i class="icon sitemap"></i></label>
+                @Html.DropDownListFor(model => model.Requests.RequestType, new SelectList(Model.RequestTypes, "RequestType", "RequestName"), "--Choose Request Type--", new { @class = "ui fluid selection dropdown", autocomplete = "off", required = "required" })
+            </div>
+        </div>
+        <div class="eight wide field">
+            <label>Review Result</label>
+            <div class="ui buttons">
+                <button type="button" class="ui button basic green deny" id="btnPass" onclick="updateSlider('Pass');">Pass</button>
+                <div class="or" onclick="updateSlider('');"></div>
+                <button type="button" class="ui button basic red deny" id="btnFail" onclick="updateSlider('Fail');">Fail</button>
+            </div>
+            <div id="resultSlider" class="hide"></div>
+            <input type="hidden" id="reviewStatus" name="reviewStatus" />
+        </div>
+    </div>
+    <hr />
+    <div class="fields">
+        <div class="sixteen wide field">
+            <label for="Requests_RequestDesc" id="lblDescription"><u>Description of Request</u></label>
+            <br />
+            <div class="info-text">@Html.Raw(Model.Requests.RequestDesc)</div>
+        </div>
+    </div>
+    <hr />
+    <div class="sixteen wide field">
+        <div id="myDocumentContainer">
+            @{
+                DocumentDisplayModel documentModel = new DocumentDisplayModel();
+                documentModel.Documents = Model.Documents;
+                documentModel.TicketNumber = Model.Requests.TicketNumber;
+                documentModel.RequestType = Model.Requests.RequestType;
+                await Html.RenderPartialAsync("/Views/Partial/Documents.cshtml", documentModel);
+            }
+        </div>
+    </div>
+</div>
+
+<div class="ui small modal" id="myDeleteModal" aria-labelledby="myDeleteModal" aria-hidden="true">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Delete Document</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <p style="margin:10px 10px 20px 10px"><label id="lblMessage" style="color:red;"></label></p>
+    </div>
+    <div class="actions">
+        <button type="button" class="ui basic button close" onclick="CloseDeleteModal()">Cancel</button>
+        <button type="button" class="ui basic button deny negative">Delete Document!</button>
+    </div>
+</div>
+
+<div class="ui small modal" id="myAddDocModal" aria-labelledby="myAddDocModal" aria-hidden="true">
+    <div class="header inverted" style="background-color:black">
+        <h3 id="modalTitle" style="color:white">Add Document</h3>
+    </div>
+    <div class="content">
+        <form asp-action="AddDocument" asp-controller="Document" method="POST" class="ui small form" id="frmAddDocument">
+            <div class="modal-body" id="PreviewAddDoc">
+                PartialView
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <button type="button" class="ui basic button close" onclick="CloseAddModal()">Cancel</button>
+        <button type="button" class="ui basic button approved positive">Add Document!</button>
+    </div>
+</div>

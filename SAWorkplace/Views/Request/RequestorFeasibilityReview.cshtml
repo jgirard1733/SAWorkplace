@@ -1,0 +1,1155 @@
+﻿@using Microsoft.AspNetCore.Http;
+@model SAWorkplace.Models.RequestEditModel
+@using System.Text.RegularExpressions
+<style>
+    .trumbowyg-box, .trumbowyg-editor {
+        margin: 0px auto !important;
+        min-height: 150px !important;
+    }
+
+    .trumbowyg-editor, .trumbowyg-textarea {
+        font-size: 14px;
+        min-height: 150px !important;
+    }
+</style>
+<link rel="stylesheet" href="~/css/jquery.datetimepicker.css" />
+<link rel="stylesheet" href="~/css/trumbowyg.colors.css" />
+<link rel="stylesheet" href="~/css/trumbowyg.min.css" />
+
+<script src="~/js/trumbowyg.min.js"></script>
+<script src="~/js/trumbowyg.colors.min.js"></script>
+<script src="~/js/trumbowyg.cleanpaste.min.js"></script>
+<script src="~/js/trumbowyg.allowtagsfrompaste.min.js"></script>
+<script src="~/js/jquery.datetimepicker.js"></script>
+
+
+@{
+    var carrierInfo = Model.Carriers.FirstOrDefault(c => c.CarrierId == Model.Requests.CarrierId);
+    string supportedLanguages = "", sellingModel = "", insuranceProducts = "", ipipelineProducts = "", directorList = "";
+    if (carrierInfo != null)
+    {
+        supportedLanguages = carrierInfo.SupportedLanguages;
+        sellingModel = carrierInfo.SellingModel;
+        insuranceProducts = carrierInfo.InsuranceProducts;
+        ipipelineProducts = carrierInfo.iPipelineProducts;
+        directorList = carrierInfo.Director;
+    }
+}
+
+<script>
+    $(document).ready(function () {
+        $(".se-pre-con").fadeOut("slow");
+        $('#Requests_TeamMembers').dropdown();
+        $('#Requests_Director').dropdown();
+        $('#ProjectSelection').dropdown();
+
+        $('#popoverId')
+            .popup({
+                on: 'click'
+            });
+
+        @{  DateTime tempDate;
+            string selectedDate = "";
+
+            if (Model.Requests.FeasProdDate != null)
+            {
+                tempDate = @Model.Requests.FeasProdDate.Value;
+                selectedDate = tempDate.ToString();
+            }
+        }
+
+        var formValidationRules =
+        {
+            Requests_OpportunityNameNumber: {
+                identifier: 'OpportunityNameNumber',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'You must enter the SOW, Change Request or Opportunity Number!'
+                    }
+                ]
+            },
+            Requests_ProjectorCode: {
+                identifier: 'ProjectorCode',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter a Projector Code!'
+                    },
+                    {
+                        type: 'exactLength[11]',
+                        prompt: 'Your Projector Code is invalid, please use a format like P000000-000!'
+                    }
+                ]
+            },
+            dcRequestReviewDate: {
+                identifier: 'RequestReviewDate',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'You must enter the Production Date!'
+                    }
+                ]
+            },
+            Requests_TeamMembers: {
+                identifier: 'TeamMembers',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter your project Team Members so they will also have access to this request!'
+                    }
+                ]
+            },
+            Requests_Director: {
+                identifier: 'Director',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter your project Director so they will also have access to this request!'
+                    }
+                ]
+            },
+            Requests_Requirements: {
+                identifier: 'Requirements',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'You must enter the Requirements!'
+                    }
+                ]
+            }
+        }
+
+
+        $('#frmViewFeasibilityReview').form({
+            fields: formValidationRules,
+            inline: true
+        });
+
+        var esigSlider = '@Model.Requests.eSig';
+        console.log("esigSlider = " + esigSlider);
+        if (esigSlider == 'on' || esigSlider == 'Yes') {
+            console.log("Requests_eSig is checked");
+            $('#Requests_eSig').prop("checked", true);
+            updateESigSlider('Yes');
+        }
+        else if (esigSlider == 'off' || esigSlider == 'No') {
+            console.log("Requests_eSig is unchecked");
+            $('#Requests_eSig').prop("checked", false);
+            updateESigSlider('No');
+        }
+
+        var splunkSlider = '@Model.Requests.Splunk';
+        console.log("splunkSlider = " + splunkSlider);
+        if (splunkSlider == 'on' || splunkSlider == 'Yes') {
+            console.log("Requests_Splunk is checked");
+            $('#Requests_Splunk').prop("checked", true);
+            updateSplunkSlider('Yes');
+        }
+        else if (splunkSlider == 'off' || splunkSlider == 'No') {
+            console.log("Requests_Splunk is unchecked");
+            $('#Requests_Splunk').prop("checked", false);
+            updateSplunkSlider('No');
+        }
+
+        $('#dcEditRequestReviewDate').datetimepicker(
+            {
+                format: 'm/d/Y',
+                step: 60,
+                timepicker: false,
+                beforeShowDay: function (date) { return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5, ""] },
+                value: '@selectedDate'
+            }
+        );
+
+        $('#Requests_ProjectType').trumbowyg({
+            btns: [
+                ['formatting'],
+                ['strong'],
+                ['emphasis'],
+                ['link'],
+                ['insertImage'],
+                ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+                ['unorderedList', 'orderedList'],
+                ['horizontalRule'],
+                ['fullscreen'],
+                ['foreColor']
+            ],
+            plugins: {
+                allowTagsFromPaste: {
+                    allowedTags: ['p', 'br', 'hr', 'strong']
+                }
+            }
+        });
+
+        @{
+            var a = Html.Raw(Model.Requests.ProjectType).ToString();
+            a = a.Replace("\r", "").Replace("\n", "").Replace("   ", "").Replace("\"", "'");
+        }
+        var projectType = "@Html.Raw(a)";
+
+        $('#Requests_ProjectType').trumbowyg('html', projectType);
+
+        var teamMembers = '@Model.Requests.TeamMembers';
+        if (teamMembers != '') {
+            var members = teamMembers.split(",");
+            for (var i = 0; i < members.length; i++) {
+                $('#Requests_TeamMembers').dropdown('set selected', members[i]);
+            }
+        }
+
+        var director = '@Model.Requests.Director';
+        if (director == '')
+            director = '@directorList';
+
+        if (director != '') {
+            var members = director.split(",");
+            for (var i = 0; i < members.length; i++) {
+                $('#Requests_Director').dropdown('set selected', members[i]);
+            }
+        }
+
+        @{
+            var showArchSection = false;
+            if (Model.Requests.SANotes != null) {
+                showArchSection = true;
+            }
+            if (Model.Requests.SteelThreadDetail != null)
+            {
+                showArchSection = true;
+            }
+            var feasForm = Model.FeasForms;
+            var feasFormComplete = false;
+            var initFormComplete = false;
+            var implFormComplete = false;
+            var initBuildFormComplete = false;
+
+            if (feasForm != null)
+            {
+                showArchSection = true;
+
+                if (Model.Requests.RequestType >= 4 && feasForm.Feas_ReviewDate != null) {
+                    feasFormComplete = true;
+                }
+                if (Model.Requests.RequestType >= 6 && feasForm.Init_ReviewDate != null){
+                    initFormComplete = true;
+                }
+                if (Model.Requests.RequestType == 7 && feasForm.Impl_ReviewDate != null) {
+                    implFormComplete = true;
+                }
+                if (Model.Requests.NeedInitBuildReview == "Yes" && Model.Requests.RequestType >= 7 && feasForm.InitBuild_ReviewDate != null)
+                {
+                    initBuildFormComplete = true;
+                }
+            }
+        }
+
+        var feasDate = "", initDate = "", initBuildDate = "", implDate = "";
+        @if (Model.Requests.FeasibilityReviewDate != null) {
+            @:feasDate = '@Model.Requests.FeasibilityReviewDate.Value.ToShortDateString()';
+        }
+        @if (Model.Requests.InitiationReviewDate != null) {
+            @:initDate = '@Model.Requests.InitiationReviewDate.Value.ToShortDateString()';
+        }
+        @if (Model.Requests.InitBuildReviewDate != null) {
+            @:initBuildDate = '@Model.Requests.InitBuildReviewDate.Value.ToShortDateString()';
+        }
+        @if (Model.Requests.ImplementationReviewDate != null) {
+            @:implDate = '@Model.Requests.ImplementationReviewDate.Value.ToShortDateString()';
+        }
+
+        @{StatusModel status = Model.Status.Where(x => x.ID.Equals(Model.Requests.RequestStatus)).FirstOrDefault(); }
+
+        if (@Model.Requests.RequestType >= 4) {
+            if (@Model.Requests.RequestType == 4) {
+                $('#divFeasibility').removeClass('disabled');
+                $('#divFeasibility').addClass('active');
+                $('#reviewName').text("Feasibility");
+
+                // handle statuses like "Closed" or "On Hold"
+                if (@Model.Requests.RequestStatus == 4 || (@Model.Requests.RequestStatus >= 14 && @Model.Requests.RequestStatus <= 16)) {
+                    $('#divFeasibility_desc').text('@status.Text');
+                }
+                else if (@Model.Requests.RequestStatus == 1) {
+                    $('#divFeasibility_desc').text('Review Pending');
+                }
+                else {
+                    $('#divFeasibility_desc').text('Under Review');
+                }
+            }
+            else {
+                $('#divFeasibility').removeClass('active');
+                $('#divFeasibility').addClass('completed');
+                $('#divFeasibility').removeClass('disabled');
+                $('#divFeasibility_desc').text('Completed on ' + feasDate);
+            }
+        }
+        if (@Model.Requests.RequestType >= 6) {
+            if (@Model.Requests.RequestType > 6) {
+                $('#divInitation').removeClass('disabled');
+                $('#divInitation').addClass('completed');
+                $('#divInitation_desc').text('Completed on ' + initDate);
+            }
+            if (@Model.Requests.RequestType == 6) {
+                if (@Model.Requests.RequestStatus == 12) {
+                    $('#divInitation').removeClass('disabled');
+                    $('#divInitation').addClass('addendum');
+                    $('#divInitation_desc').text('In Change Request Review');
+                } else {
+                    $('#divInitation').removeClass('disabled');
+                    $('#divInitation').addClass('active');
+                    $('#reviewName').text("Initiation");
+
+                    // handle statuses like "Closed" or "On Hold"
+                    if (@Model.Requests.RequestStatus == 4 || (@Model.Requests.RequestStatus >= 14 && @Model.Requests.RequestStatus <= 16)) {
+                        $('#divInitation_desc').text('@status.Text');
+                    }
+                    else {
+                        $('#divInitation_desc').text('Under Review');
+                    }
+                }
+            }
+        }
+
+        //Post Initial Build Review - new optional review step
+        if ('@Model.Requests.NeedInitBuildReview' == 'Yes') {
+            $('#divInitBuild').removeClass('hide');
+            $('#divInitBuild').addClass('step');
+
+            if (@Model.Requests.RequestType == 7) {
+                $('#divInitBuild').removeClass('disabled');
+                $('#divInitBuild').addClass('completed');
+                $('#divInitBuild_desc').text('Completed on ' + initBuildDate);
+            }
+            if (@Model.Requests.RequestType == 8) {
+                if (@Model.Requests.RequestStatus == 12) {
+                    $('#divInitBuild').removeClass('disabled');
+                    $('#divInitBuild').addClass('addendum');
+                    $('#divInitBuild_desc').text('In Change Request Review');
+                } else {
+                    $('#divInitBuild').removeClass('disabled');
+                    $('#divInitBuild').addClass('active');
+                    $('#reviewName').text("Post Initial Build");
+
+                    // handle statuses like "Closed" or "On Hold"
+                    if (@Model.Requests.RequestStatus == 4 || (@Model.Requests.RequestStatus >= 14 && @Model.Requests.RequestStatus <= 16)) {
+                        $('#divInitBuild_desc').text('@status.Text');
+                    }
+                    else {
+                        $('#divInitBuild_desc').text('Under Review');
+                    }
+                }
+            }
+        }
+        //Implementation review
+        if (@Model.Requests.RequestType == 7) {
+            $('#reviewName').text("Implementation");
+            if (@Model.Requests.RequestStatus == 3) {
+                $('#divImplementation').removeClass('disabled');
+                $('#divImplementation').addClass('completed');
+                $('#divImplementation_desc').text('Completed on ' + implDate);
+                $('#divProduction').addClass('active');
+                $('#divProduction').removeClass('disabled');
+                $('#divProduction_desc').text('Ready!');
+                $('#Requests_SpecialChallenge').prop("disabled", true);
+                $('#Requests_RequestDesc').prop("disabled", true);
+                $('#Requests_Requirements').prop("disabled", true);
+                $('#Requests_OpportunityNameNumber').prop("disabled", true);
+                $('#btnSubmitFeasibility').prop("disabled", true);
+            }
+            else if (@Model.Requests.RequestStatus == 12)
+            {
+                $('#divImplementation').addClass('addendum');
+                $('#divImplementation').removeClass('disabled');
+                $('#divImplementation_desc').text('In Change Request Review');
+            }
+            else {
+                $('#divImplementation').addClass('active');
+                $('#divImplementation').removeClass('disabled');
+
+                // handle statuses like "Closed" or "On Hold"
+                if (@Model.Requests.RequestStatus == 4 || (@Model.Requests.RequestStatus >= 14 && @Model.Requests.RequestStatus <= 16)) {
+                    $('#divImplementation_desc').text('@status.Text');
+                }
+                else {
+                    $('#divImplementation_desc').text('Under Review');
+                }
+            }
+        }
+
+        $('#frmAddAddendumReview').submit(function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+
+            $.ajax({
+                url: '@Url.Action("AddendumReview", "Feasibility")',
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                        if (result.success == true) {
+                            scrollTo(0, 0);
+                        $('#postMsg').removeClass('hide');
+                        $('#postMsg').addClass('show');
+                            setTimeout(top.location.href = '/', 1000);
+                        }
+                    },
+                error: function (result) {
+                        console.log(result.responseText);
+                    }
+                });
+                return false;
+            });
+        $('#btnSubmitFeasibility').click(function () {
+            console.log('true submit');
+            $('#btnTrueSubmit').click();
+        });
+
+        $('#frmViewFeasibilityReview').submit(function (e) {
+            var formSuccess = $('#frmViewFeasibilityReview').form('is valid');
+                        console.log('form submission with success?: ' + formSuccess);
+
+        if (formSuccess == true) {
+            scrollTo(0, 0);
+            $('#postMsg').removeClass('hide');
+            $('#postMsg').addClass('show');
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            var updatedTeamMembers = $('#Requests_TeamMembers').val();
+            formData.append("updatedTeamMembers", updatedTeamMembers);
+            var updatedDirector = $('#Requests_Director').val();
+            formData.append("updatedDirector", updatedDirector);
+
+            $.ajax({
+                url: '@Url.Action("ViewFeasibility", "Feasibility")',
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                    if (result.success == true) {
+                        top.location.href = '/';
+                    }
+                },
+                error: function (result) {
+                    console.log(result.responseText);
+                }
+            });
+            return false;
+        }
+    });
+
+
+
+        $('#frmAddDocument').submit(function (e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+            $.ajax({
+                url: '@Url.Action("AddDocument", "Document")',
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    $('#myAddDocModal').modal('hide');
+                    $('#myDocumentContainer').html(data);
+                    //setMoveButton(data);
+                },
+                error: function (data) {
+                    console.log("Error: " + data.responseText);
+                    $('#myAddDocModal').modal('hide');
+                    $('#myDocumentContainer').html(data);
+                }
+            });
+            return false;
+        });
+
+        $('#myAddModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            onDeny: function () {
+                $('#myAddModal').modal('hide');
+                window.location.reload();
+            },
+            onApprove: function (e) {
+                var validated = $('#frmRequest').form('validate form');
+                if (!validated) {
+                    return false;
+                }
+                else {
+                    $('#frmRequest').submit();
+                }
+            }
+        });
+
+        $('#myAddendumReviewModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            onDeny: function () {
+                $('#myAddendumReviewModal').modal('hide');
+                window.location.reload();
+            },
+            onApprove: function (e) {
+                var validated = $('#frmAddAddendumReview').form('validate form');
+                if (!validated) {
+                    return false;
+                }
+                else {
+                    $('#frmAddAddendumReview').submit();
+                }
+            }
+        });
+    });
+
+    function OpenAddendumReviewModal(ticketNum) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("AddendumReview", "Feasibility")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewAddendumReview').html(data);
+                $('#myAddendumReviewModal').modal('show');
+            }
+        });
+    };
+
+    function CloseAddendumModal() {
+        $('#myAddendumReviewModal').modal('hide');
+    };
+
+     function Delete(documentId, ticketNum, requestType) {
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("DeleteDocument", "Document")',
+            data: { documentID: documentId, ticketNum: ticketNum, requestType: requestType },
+            success: function (data) {
+                $('#myDocumentContainer').html(data);
+                hideDimmers();
+                //setMoveButton(data);
+            }
+        })
+    }
+
+    function DeleteRequestModal() {
+        $('#lblDeleteMessage').text('Are you sure you want to DELETE this request?');
+        $('#myDeleteRequestModal').modal({closable: false,transition: 'scale',allowMultiple: true}).modal('show');
+    }
+
+    function DeleteRequest() {
+        var requestID = @Model.Requests.RequestId;
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("DeleteRequest", "Request")',
+            data: { requestID: requestID },
+            success: function (result) {
+                $('#myDeleteRequestModal').modal('hide');
+                top.location.href = '/';
+            },
+            error: function (result) {
+                console.log(result.responseText);
+            }
+        });
+    };
+
+    function CloseDeleteRequestModal() {
+        $('#myDeleteRequestModal').modal('hide');
+    };
+
+    function OpenFeasibilityFormModal(ticketNum) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("FeasibilityForm", "Feasibility")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewFeasibilityForm').html(data);
+                $('#myFeasibilityFormModal').modal('show');
+            }
+        });
+    };
+
+    function CloseFeasibilityFormModal() {
+        $('#myFeasibilityFormModal').modal('hide');
+    };
+
+    function OpenInitiationFormModal(ticketNum) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("InitiationForm", "Feasibility")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewInitiationForm').html(data);
+                $('#myInitiationFormModal').modal('show');
+            }
+        });
+    };
+
+    function CloseInitiationFormModal() {
+        $('#myInitiationFormModal').modal('hide');
+    };
+
+    //Post Initial Build review form
+    function OpenInitBuildFormModal(ticketNum) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("InitBuildForm", "Feasibility")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewInitBuildForm').html(data);
+                $('#myInitBuildFormModal').modal('show');
+            }
+        });
+    };
+
+    function CloseInitBuildFormModal() {
+        $('#myInitBuildFormModal').modal('hide');
+    };
+
+    function OpenImplementationFormModal(ticketNum) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("ImplementationForm", "Feasibility")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewImplementationForm').html(data);
+                $('#myImplementationFormModal').modal('show');
+            }
+        });
+    };
+
+    function CloseImplementationFormModal() {
+        $('#myImplementationFormModal').modal('hide');
+    };
+
+    function AddtoProjectType() {
+        var selections = $('#ProjectSelection');
+        var description = '';
+        var currentDescription = $('#Requests_ProjectType').trumbowyg('html');
+        $('#ProjectSelection > option').each(function () {
+            if (this.selected) {
+                description = currentDescription + '<b>' + this.text + '</b><hr></br></br>';
+            }
+        });
+        $('#Requests_ProjectType').trumbowyg('html', description);
+    };
+
+    function updateESigSlider(sliderText) {
+        $('#resultSlider').html(sliderText);
+        if (sliderText == 'Yes') {
+            $('#btnNo').addClass('basic');
+            $('#btnYes').removeClass('basic');
+        }
+        else if (sliderText == 'No') {
+            $('#btnYes').addClass('basic');
+            $('#btnNo').removeClass('basic');
+        }
+        else {
+            $('#btnYes').addClass('basic');
+            $('#btnNo').addClass('basic');
+        }
+        $('#Requests_eSig').val(sliderText);
+        return false;
+    }
+
+    function updateSplunkSlider(sliderText) {
+        $('#resultSplunkSlider').html(sliderText);
+        if (sliderText == 'Yes') {
+            $('#btnNo2').addClass('basic');
+            $('#btnYes2').removeClass('basic');
+        }
+        else if (sliderText == 'No') {
+            $('#btnYes2').addClass('basic');
+            $('#btnNo2').removeClass('basic');
+        }
+        else {
+            $('#btnYes2').addClass('basic');
+            $('#btnNo2').addClass('basic');
+        }
+        $('#Requests_Splunk').val(sliderText);
+        return false;
+    }
+</script>
+
+<nav id="ProcessHeader" class="navbar navbar-expand-lg navbar-dark primary-color" style="padding:10px 10px 20px 10px">
+    <h2>
+        <span id="h2Process">Your Review</span><span>  # @Model.Requests.TicketNumber</span>
+    </h2>
+</nav>
+
+<div class="se-pre-con"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Loading Review...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+<div class="se-post-con hide" id="postMsg"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Updating Review...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+
+<div class="ui cards" style="padding:0px 10px 0px 10px">
+    <div id="feasabilityViewContainer" class="ui one card fluid" style="box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; border:none !important; padding:15px 15px 15px 15px">
+        <table width="100%">
+            <tr>
+                <td width="18%">
+                    @{
+                        if (Model.Requests.RequestType > 4 && Model.Requests.RequestStatus != 12)
+                        {
+                            <input type="button" class="ui basic button orange" value="Add Change Request Review" onclick="OpenAddendumReviewModal('@Model.Requests.TicketNumber');" />
+                        }
+                    }
+                </td>
+                <td style="align-content:center">
+                    <div class="ui steps">
+                        <div id="divFeasibility" class="active step">
+                            <i class="paper plane outline icon"></i>
+                            <div class="content">
+                                <div id="divFeasibility_title" class="title">Feasibility Review</div>
+                                <div id="divFeasibility_desc" class="description">Under Review</div>
+                            </div>
+                        </div>
+                        <div id="divInitation" class="disabled step">
+                            <i class="sitemap icon"></i>
+                            <div class="content">
+                                <div id="divInitation_title" class="title">Initiation Review</div>
+                                <div id="divInitation_desc" class="description">TBD</div>
+                            </div>
+                        </div>
+                        <div id="divInitBuild" class="disabled hide">
+                            <i class="laptop icon"></i>
+                            <div class="content">
+                                <div id="divInitBuild_title" class="title">Post Initial Build Review</div>
+                                <div id="divInitBuild_desc" class="description">TBD</div>
+                            </div>
+                        </div>
+                        <div id="divImplementation" class="disabled step">
+                            <i class="keyboard outline icon"></i>
+                            <div class="content">
+                                <div id="divImplementation_title" class="title">Implementation Review</div>
+                                <div id="divImplementation_desc" class="description">TBD</div>
+                            </div>
+                        </div>
+                        <div id="divProduction" class="disabled step">
+                            <i class="globe icon"></i>
+                            <div class="content">
+                                <div id="divProduction_title" class="title">Production Ready</div>
+                                <div id="divProduction_desc" class="description">TBD</div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <hr style="padding:0px 0px 0px 0px !important; margin:10px 0px 10px 0px !important;position: relative;" />
+        <form asp-action="ViewFeasibilityReview" asp-controller="Feasibility" method="POST" data-ajax="true" data-ajax-update="frmViewFeasibilityReview" id="frmViewFeasibilityReview" class="ui small form">
+            @Html.HiddenFor(model => model.Requests.RequestId)
+            @Html.HiddenFor(model => model.Requests.RequestDate)
+            @Html.HiddenFor(model => model.Requests.TicketNumber)
+            @Html.HiddenFor(model => model.Requests.RequestType)
+            @Html.HiddenFor(model => model.Requests.Requestor)
+            @Html.HiddenFor(model => model.Requests.RequestorName)
+            @Html.HiddenFor(model => model.Requests.RequestorEmail)
+            @Html.HiddenFor(model => model.Requests.RequestStatus)
+            @Html.HiddenFor(model => model.Requests.ProgressType)
+            @Html.HiddenFor(model => model.Requests.CarrierId)
+            @Html.HiddenFor(model => model.Requests.CarrierName)
+            @Html.HiddenFor(model => model.Requests.AssignedSA)
+            @Html.HiddenFor(model => model.Requests.AssignedSAEmail)
+            @Html.HiddenFor(model => model.Requests.AssignedSAName)
+            @Html.HiddenFor(model => model.Requests.ProjectName)
+            @Html.HiddenFor(model => model.Requests.FeasibilityReviewDate)
+            @Html.HiddenFor(model => model.Requests.InitiationReviewDate)
+            @Html.HiddenFor(model => model.Requests.InitBuildReviewDate)
+            @Html.HiddenFor(model => model.Requests.ImplementationReviewDate)
+            @Html.HiddenFor(model => model.Requests.RequestReviewDate)
+            @Html.HiddenFor(model => model.Requests.NeedInitBuildReview)
+
+            <div class="one field">
+                <div>
+                    <h3 style="color: #4183c4"><i>@Model.Requests.ProjectName</i></h3>
+                </div>
+            </div>
+            <div class="three fields">
+                <div class="five wide field">
+                    <div style="padding-bottom:5px !important">
+                        <b>Ticket #: </b>@Model.Requests.TicketNumber
+                    </div>
+                    <div style="padding-bottom:5px !important">
+                        <b>Carrier: </b>@Model.Requests.CarrierName <a style="cursor:pointer" id="popoverId" tabindex="0" role="button" data-position="right center"
+                                                                       data-html="<b>@Html.Raw(Model.Requests.CarrierName)</b><div><hr/><b>Supported Languages:</b> @Html.Raw(supportedLanguages)<br/><br/><b>Selling Model:</b> @Html.Raw(sellingModel)<br/><br/><b>Insurance Products:</b> @Html.Raw(insuranceProducts)<br/><br/><b>iPpeline Products:</b> @Html.Raw(ipipelineProducts)<br/><br/><b>Technology:</b> @Html.Raw(Model.Requests.Technology)</div>">
+                            <img id="imgInfo" src="~/img/indicators/info.png" height="22" width="22" style="vertical-align:middle; padding-bottom:4px" />
+                        </a>
+                    </div>
+                    <div style="padding-bottom:5px !important">
+                        <b>Assigned SA: </b>@Model.Requests.AssignedSAName
+                    </div>
+                    <div style="padding-bottom:5px !important">
+                        <b>Status: </b>@status.Text
+                    </div>
+                </div>
+                <div class="five wide field">
+                    <label for="Requests_OpportunityNameNumber">SOW, CR or Opportunity Name or Number</label>
+                    <div class="ui labeled input" style="max-width: 96%; padding-bottom: 10px !important">
+                        <label for="Requests_OpportunityNameNumber" class="ui ltgray label"><i class="icon file md"></i></label>
+                        <input type="text" name="@Html.NameFor(model => model.Requests.OpportunityNameNumber)" id="@Html.IdFor(model => model.Requests.OpportunityNameNumber)" autocomplete="off" data-validate="OpportunityNameNumber" value="@Html.Raw(Model.Requests.OpportunityNameNumber)" />
+                    </div>
+                    <br/>
+                    <label for="Requests_Members">Team Members</label>
+                    <div class="ui labeled input" style="max-width:96%">
+                        <label for="Requests_TeamMembers" class="ui ltgray label"><i class="icon users md"></i></label>
+                        <select id="Requests_TeamMembers" name="Requests_TeamMembers" class="ui fluid search dropdown" multiple="" rows="2" data-validate="TeamMembers">
+                            <option value=""></option>
+                            @{
+                                foreach (var tm in Model.TeamMembers)
+                                {
+                                    <option value="@tm.UserId:@tm.EmailAddress:@tm.UserName">@tm.UserName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="five wide field">
+                    <label for="Requests_ProjectorCode">Projector Code</label>
+                    <div class="ui labeled input" style="max-width: 96%; padding-bottom: 10px !important">
+                        <label for="Requests_ProjectorCode" class="ui ltgray label"><i class="icon file md"></i></label>
+                        <input type="text" name="@Html.NameFor(model => model.Requests.ProjectorCode)" id="@Html.IdFor(model => model.Requests.ProjectorCode)" autocomplete="off" data-validate="ProjectorCode" value="@Html.Raw(Model.Requests.ProjectorCode)" />
+                    </div>
+                    <br />
+                    <label for="Requests_Director">Director</label>
+                    <div class="ui labeled input" style="max-width:96%">
+                        <label for="Requests_Director" class="ui ltgray label"><i class="icon users md"></i></label>
+                        <select id="Requests_Director" name="Requests_Director" class="ui fluid search dropdown" multiple="" data-validate="Director">
+                            <option value=""></option>
+                            @{
+                                foreach (var dr in Model.Director)
+                                {
+                                    <option value="@dr.UserId:@dr.EmailAddress:@dr.UserName">@dr.UserName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="three fields">
+                <div class="five wide field">
+                    <label>New eSignature Implementation? (AlphaTrust or DocuSign)</label>
+                    <div class="ui buttons">
+                        <button type="button" class="ui button basic blue deny" id="btnYes" onclick="updateESigSlider('Yes');">Yes</button>
+                        <div class="or" onclick="updateESigSlider('');"></div>
+                        <button type="button" class="ui button basic gray deny" id="btnNo" onclick="updateESigSlider('No');">No</button>
+                    </div>
+                    <div id="resultSlider" class="hide"></div>
+                    @Html.HiddenFor(model => model.Requests.eSig)
+                </div>
+                <div class="five wide field">
+                    <label for="Requests_RequestReviewDate">Expected PROD Date</label>
+                    <div class="ui labeled input" style="max-width:96%">
+                        <label for="Requests_RequestReviewDate" class="ui ltgray label"><i class="icon calendar md"></i></label>
+                        <input type="text" name="@Html.NameFor(model => model.Requests.FeasProdDate)" id="dcEditRequestReviewDate" autocomplete="off" data-validate="RequestReviewDate" />
+                    </div>
+                </div>
+                <div class="five wide field">
+                    <label for="Requests_RequestDesc">Additional Request Description</label>
+                    <div class="ui labeled input" style="max-width:96%">
+                        <label for="Requests_RequestDesc" class="ui ltgray label"><i class="icon book md"></i></label>
+                        <textarea id="@Html.IdFor(model => model.Requests.RequestDesc)" name="@Html.NameFor(model => model.Requests.RequestDesc)" class="form-control" style="max-width:500px" cols="2" rows="1" autocomplete="off">@Html.Raw(Model.Requests.RequestDesc)</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="three fields">
+                <div class="five wide field">
+                    <label>Does the Developer need Splunk Training?</label>
+                    <div class="ui buttons">
+                        <button type="button" class="ui button basic blue deny" id="btnYes2" onclick="updateSplunkSlider('Yes');">Yes</button>
+                        <div class="or" onclick="updateSplunkSlider('');"></div>
+                        <button type="button" class="ui button basic gray deny" id="btnNo2" onclick="updateSplunkSlider('No');">No</button>
+                    </div>
+                    <div id="resultSplunkSlider" class="hide"></div>
+                    @Html.HiddenFor(model => model.Requests.Splunk)
+                </div>
+                <div class="five wide field">
+                    <label for="Requests_BusinessRequirement">Business Objective/Requirements</label>
+                    <div class="ui labeled input" style="max-width:96%">
+                        <label for="Requests_Requirements" class="ui ltgray label"><i class="icon copy md"></i></label>
+                        <textarea id="@Html.IdFor(model => model.Requests.Requirements)" name="@Html.NameFor(model => model.Requests.Requirements)" class="form-control" style="max-width:500px" cols="2" rows="4" autocomplete="off">@Html.Raw(Model.Requests.Requirements)</textarea>
+                    </div>
+                </div>
+                <div class="five wide field">
+                    <label for="Requests_SpecialChallenge">Risks/Special Challenges</label>
+                    <div class="ui labeled input" style="max-width:96%">
+                        <label for="Requests_SpecialChallenge" class="ui ltgray label"><i class="icon wheelchair md"></i></label>
+                        <textarea id="@Html.IdFor(model => model.Requests.SpecialChallenge)" name="@Html.NameFor(model => model.Requests.SpecialChallenge)" class="form-control" style="max-width:500px" cols="2" rows="4" autocomplete="off">@Html.Raw(Model.Requests.SpecialChallenge)</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="two fields">
+                <div class="five wide field">
+                    <label for="Requests_CarrierId">Type of Work</label>
+                    <div class="ui labeled input" style="max-width:96%">
+                        <label for="Requests_ProjectSelection" class="ui ltgray label"><i class="icon industry md"></i></label>
+                        <select id="ProjectSelection" name="ProjectSelection" multiple="multiple" class="ui fluid search dropdown" onchange="AddtoProjectType();" data-validate="ProjectSelection">
+                            <option value="NewLogo">New Logo (new carrier to iPipeline)</option>
+                            <option value="NewProduct">New Type of Product</option>
+                            <option value="NewApp">New iPipeline Product</option>
+                            <option value="NewIntegration">New Integration</option>
+                            <option value="NewReg">New Business Regulation</option>
+                            <option value="NewFeature">Adding New Features</option>
+                            <option value="NewFlow">New or Altered Screen Flow</option>
+                            <option value="Other">Other Additions</option>
+                        </select>
+                    </div>
+
+                    <br /><br />
+                    <div class="ui ignored info attached message">
+                        <h4>
+                            Please refer to the
+                            <a href="https://ipipeline.sharepoint.com/:w:/r/sites/ProfessionalServices/professionalservicesus/PSAdmin/PS Onboarding Materials/OneIP/Feasibility Review Guide.docx?d=w714d03d7704046dbb67e229f8bf8813a&csf=1&web=1&e=XOIjgc" target="_blank"><u>Feasibility Review Guide</u></a>
+                            - <i>How do I collect the necessary information for the ticket?</i>&nbsp;&nbsp; Use the required questions to fill out the section on the right.
+                        </h4>
+                    </div>
+                </div>
+                <div class="ten wide field">
+                    <label for="Requests_ProjectType">Please add descriptions to the selections made on the left</label>
+                    <div class="ui labeled input" style="max-width:96%">
+                        <label for="Requests_ProjectType" class="ui ltgray label"><i class="icon industry md"></i></label>
+                        <textarea id="@Html.IdFor(model => model.Requests.ProjectType)" name="@Html.NameFor(model => model.Requests.ProjectType)" class="form-control" style="max-width:300px" cols="2" rows="3" autocomplete="off"></textarea>
+                    </div>
+                </div>
+            </div>
+            @{ if (showArchSection)
+                {
+                    <hr />
+                    <div class="fields">
+                        <div class="sixteen wide field">
+                            <h3 style="color: #4183c4"><i>Architecture Feedback</i></h3>
+                        </div>
+                    </div>
+                    <div class="two fields">
+                        <div class="eight wide field">
+                            <div style="max-width: 95%; margin: 5px !important">
+                                <b>Notes:</b>
+                                @Html.Raw(Model.Requests.SANotes)
+                            </div>
+
+                            @Html.HiddenFor(model => model.Requests.SteelThread)
+                            @Html.HiddenFor(model => model.Requests.SteelThreadDetail)
+                            @if (Model.Requests.SteelThread == "Yes")
+                            {
+                                <br />
+                                <div style="max-width: 95%; margin: 5px !important">
+                                    <b>Steel Thread Details:</b>
+                                    @Model.Requests.SteelThreadDetail
+                                </div>
+                            }
+                        </div>
+                        <div class="eight wide field">
+                            @if (feasForm != null)
+                            {
+                                <div><b>Review results:</b><br /> </div>
+                                <input type="button" class="ui blue basic button" value="Feasibility Review Form" onclick="OpenFeasibilityFormModal('@Model.Requests.TicketNumber');" />
+
+                                if (initFormComplete)
+                                {
+                                    <input type="button" class="ui blue basic button" value="Initiation Review Form" onclick="OpenInitiationFormModal('@Model.Requests.TicketNumber');" />
+                                }
+                                if (initBuildFormComplete)
+                                {
+                                    <input type="button" class="ui blue basic button" value="Post Initial Build Review Form" onclick="OpenInitBuildFormModal('@Model.Requests.TicketNumber');" />
+                                }
+                                if (implFormComplete)
+                                {
+                                    <input type="button" class="ui blue basic button" value="Implementation Review Form" onclick="OpenImplementationFormModal('@Model.Requests.TicketNumber');" />
+                                }
+                                <br />
+                                <div class="ui ignored blue attached message" style="width:90%">
+                                    <img id="imgInfo" src="~/img/indicators/info.png" height="24" width="24" style="vertical-align:middle; padding-bottom:2px" />
+                                    <b>After each review, the results will appear here once the Architect has completed the form.</b>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                } }
+            <hr />
+            <div class="two fields">
+                <div class="eight wide field">
+                    <label id="lblDescription"><u>Comments</u></label>
+                    <table width="100%" border="0">
+                        @{
+                            foreach (var comment in Model.History)
+                            {
+                                <tr>
+                                    <td class="info-text"><b><font color="blue">@comment.AddedBy</font></b>: @Html.Raw(comment.History) - <span style="font-size:xx-small !important">@comment.AddDateTime</span></td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                </div>
+                <div class="eight wide field">
+                    <br />
+                    <div class="ui labeled input">
+                        <label for="newComment" class="ui ltgray label"><i class="icon comment alternate"></i></label>
+                        <textarea id="newComment" name="newComment" placeholder="Add Comment" spellcheck="true" style="max-width:90%" cols="2" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <input type="submit" id="btnTrueSubmit" style="visibility:hidden" />
+            <div class="sixteen wide field" id="myDocumentContainer">
+                @{
+                    DocumentDisplayModel documentModel = new DocumentDisplayModel();
+                    documentModel.Documents = Model.Documents;
+                    documentModel.TicketNumber = Model.Requests.TicketNumber;
+                    documentModel.RequestType = Model.Requests.RequestType;
+                    await Html.RenderPartialAsync("/Views/Partial/Documents.cshtml", documentModel);
+                }
+            </div>
+            <div class="sixteen wide field">
+                <hr /><br />
+                <button type="button" id="btnSubmitFeasibility" value="SubmitRequest" class="ui positive basic button">Update Request</button>
+                <button type="button" id="btnDeleteFeasibility" value="DeleteRequest" class="ui negative basic button" onclick="DeleteRequestModal();">Delete Request</button>
+                <button type="button" value="Cancel" class="ui basic button" onclick="top.location.href='/'" style="width:138px">Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ui small modal" id="myAddendumReviewModal" aria-labelledby="myAddendumReviewModal" aria-hidden="true" style="z-index:2000; width:800px">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Add Change Request Review</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"><i onclick="CloseAddendumModal();" class="close small icon" style="color:white !important"></i></div>
+
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="AddendumReview" asp-controller="Feasibility" method="POST" class="ui small form" id="frmAddAddendumReview">
+            <div class="modal-body" id="PreviewAddendumReview">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                <button type="button" class="ui positive basic button approved">Add Review</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ui small modal" id="myDeleteRequestModal" aria-labelledby="myDeleteRequestModal" aria-hidden="true" style="z-index:2500;">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Delete Request</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <p style="margin:10px 10px 20px 10px"><label id="lblDeleteMessage" style="color:red;"></label></p>
+    </div>
+    <div class="actions">
+        <button type="button" class="ui basic button close" onclick="CloseDeleteRequestModal()">Cancel</button>
+        <button type="button" class="ui basic button deny negative" onclick="DeleteRequest()">Delete Request!</button>
+    </div>
+</div>
+
+<div class="ui small modal" id="myDeleteModal" aria-labelledby="myDeleteModal" aria-hidden="true">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Delete Document</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <p style="margin:10px 10px 20px 10px"><label id="lblMessage" style="color:red;"></label></p>
+    </div>
+    <div class="actions">
+        <button type="button" class="ui basic button close" onclick="CloseDeleteModal()">Cancel</button>
+        <button type="button" class="ui basic button deny negative">Delete Document!</button>
+    </div>
+</div>
+
+<div class="ui small modal" id="myAddDocModal" aria-labelledby="myAddDocModal" aria-hidden="true">
+    <div class="header inverted" style="background-color:black">
+        <h3 id="modalTitle" style="color:white">Add Document</h3>
+    </div>
+    <div class="content">
+        <form asp-action="AddDocument" asp-controller="Document" method="POST" class="ui small form" id="frmAddDocument">
+            <div class="modal-body" id="PreviewAddDoc">
+                PartialView
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <button type="button" class="ui basic button close" onclick="CloseAddModal()">Cancel</button>
+        <button type="button" class="ui basic button approved positive">Add Document!</button>
+    </div>
+</div>
+
+<div class="ui small modal" id="myFeasibilityFormModal" aria-labelledby="myFeasibilityFormModal" aria-hidden="true" style="z-index:2000; width:900px">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Feasibility Review</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"><i onclick="CloseFeasibilityFormModal();" class="close small icon" style="color:white !important"></i></div>
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="FeasibilityForm" asp-controller="Feasibility" method="POST" class="ui small form" id="frmFeasibilityForm">
+            <div class="modal-body" disabled="disabled" id="PreviewFeasibilityForm">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                <button type="button" id="FeasFormButton" class="ui basic button close" onclick="CloseFeasibilityFormModal();">Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ui small modal" id="myInitiationFormModal" aria-labelledby="myInitiationFormModal" aria-hidden="true" style="z-index:2000; width:900px">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Initiation Review</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"><i onclick="CloseInitiationFormModal();" class="close small icon" style="color:white !important"></i></div>
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="InitiationForm" asp-controller="Feasibility" method="POST" class="ui small form" id="frmInitiationForm">
+            <div class="modal-body" disabled="disabled" id="PreviewInitiationForm">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                <button type="button" id="InitFormButton" class="ui basic button close" onclick="CloseInitiationFormModal();">Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ui small modal" id="myInitBuildFormModal" aria-labelledby="myInitBuildFormModal" aria-hidden="true" style="z-index:2000; width:900px">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Post Initial Build Review</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"><i onclick="CloseInitBuildFormModal();" class="close small icon" style="color:white !important"></i></div>
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="InitBuildForm" asp-controller="Feasibility" method="POST" class="ui small form" id="frmInitBuildForm">
+            <div class="modal-body" disabled="disabled" id="PreviewInitBuildForm">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                <button type="button" id="InitBuildFormButton" class="ui basic button close" onclick="CloseInitBuildFormModal();">Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ui small modal" id="myImplementationFormModal" aria-labelledby="myImplementationFormModal" aria-hidden="true" style="z-index:2000; width:900px">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Implementation Review</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"><i onclick="CloseImplementationFormModal();" class="close small icon" style="color:white !important"></i></div>
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="ImplementationForm" asp-controller="Feasibility" method="POST" class="ui small form" id="frmImplementationForm">
+            <div class="modal-body" disabled="disabled" id="PreviewImplementationForm">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                <button type="button" id="ImplFormButton" class="ui basic button close" onclick="CloseImplementationFormModal();">Close</button>
+            </div>
+        </form>
+    </div>
+</div>

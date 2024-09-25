@@ -1,69 +1,280 @@
 ﻿@model SAWorkplace.Models.RequestDisplayModel
-@using System.DirectoryServices.AccountManagement
-@using System.DirectoryServices
-@using System.Security.Claims
+@using Microsoft.AspNetCore.Http;
+@using System.Web;
+@using System.Text.RegularExpressions;
 
 <script>
     $(document).ready(function () {
         $(".se-pre-con").fadeOut("slow");
+
+        $('#myAddModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            onDeny: function () {
+                $('#myAddModal').modal('hide');
+                setTimeout(window.location.reload(), '1500');
+            },
+            onApprove: function (e) {
+                var validated = $('#frmRequest').form('validate form');
+                if (!validated) {
+                    return false;
+                }
+                else {
+                    $('#frmRequest').submit();
+                }
+            }
+        });
+
+        $('#myEditModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            allowMultiple: true,
+            onDeny: function () {
+                $('#myDeleteRequestModal').modal('show');
+                return false;
+            },
+            onApprove: function (e) {
+                var validated = $('#frmEditRequest').form('validate form');
+                if (!validated) {
+                    return false;
+                }
+                else {
+                        $('#frmEditRequest').submit();
+                }
+            }
+        });
+
+        $('#myCodeReviewModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            onHidden: function () {
+                closeEverything();
+            },
+            onApprove: function (e) {
+                var validated = $('#frmUpdateCodeReview').form('validate form');
+                if (!validated) {
+                    return false;
+                }
+                else {
+                    $('#frmUpdateCodeReview').submit();
+                }
+            }
+        });
+
+
+
+        $('#myProjectConcernModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            onHidden: function () {
+                closeEverything();
+            },
+            onApprove: function (e) {
+                var validated = $('#frmUpdateProjectConcern').form('validate form');
+                if (!validated) {
+                    return false;
+                }
+                else {
+                    $('#frmUpdateProjectConcern').submit();
+                }
+            }
+        });
+
+        $('#myLoadTestModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            allowMultiple: true,
+            onApprove: function (e) {
+                var validated = $('#frmUpdateLoadTest').form('validate form');
+                if (!validated) {
+                    return false;
+                }
+                else {
+                    $('#frmUpdateLoadTest').submit();
+                }
+            },
+            onHidden: function () {
+                closeEverything();
+            }
+        });
+
+        $('#myIssueReviewModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            allowMultiple: true,
+            onApprove: function (e) {
+                var validated = $('#frmUpdateIssueReview').form('validate form');
+                if (!validated) {
+                    return false;
+                }
+                else {
+                    $('#frmUpdateIssueReview').submit();
+                }
+            },
+            onHidden: function () {
+                closeEverything();
+            }
+        });
     });
+
+    function closeEverything() {
+        $('#myCodeReviewModal').modal('hide');
+        $('#myProjectConcernModal').modal('hide');
+        $('#myAddDocModal').modal('hide');
+        $('#myAddLoadTestModal').modal('hide');
+        $('#modIssueHide').dimmer('hide');
+        $('#modLoadTestHide').dimmer('hide');
+        $('#modEditHide').dimmer('hide');
+        window.location.reload();
+    }
 
     function OpenEditModal(ticketNum) {
         $('#PreviewAdd').html("");
+        $('#PreviewCodeReview').html("");
+        $('#PreviewLoadTest').html("");
+        $('#PreviewIssueReview').html("");
+        $('#PreviewProjectConcern').html("");
         $.ajax({
             type: "Get",
-            url: '@Url.Action("EditRequest", "Home")',
+            url: '@Url.Action("EditRequest", "Request")',
             data: { ticketNum: ticketNum },
             success: function (data) {
                 $('#PreviewEdit').html(data);
-                $('#myEditModal').modal({
-                show: true,
-                keyboard: false,
-                backdrop: 'static'});
+                $('#myEditModal').modal('show');
             }
         });
     };
 
+    function clearDropdown() { setTimeout(function () { $('.ui.dropdown').dropdown('clear').dropdown('restore defaults') }, 0) }
+
     function OpenAddModal() {
+        clearDropdown();
+
         $('#PreviewEdit').html("");
+        $('#PreviewCodeReview').html("");
+        $('#PreviewLoadTest').html("");
+        $('#PreviewIssueReview').html("");
+        $('#PreviewProjectConcern').html("");
         $.ajax({
             type: "Get",
-            url: '@Url.Action("AddRequest", "Home")',
+            url: '@Url.Action("AddRequest", "Request")',
             success: function (data) {
                 $('#PreviewAdd').html(data);
-                $('#myAddModal').modal({
-                    show: true,
-                    keyboard: false,
-                    backdrop: 'static'
-                });
+                $('#myAddModal').modal('show');
+            }
+        });
+    };
+
+    function OpenCodeReviewModal(ticketNum) {
+        $('#PreviewEdit').html("");
+        $('#PreviewAdd').html("");
+        $('#PreviewLoadTest').html("");
+        $('#PreviewIssueReview').html("");
+        $('#PreviewProjectConcern').html("");
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("CodeReview", "SARequest")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewCodeReview').html(data);
+                $('#myCodeReviewModal').modal('show');
+            }
+        });
+    };
+
+    function OpenLoadTestModal(ticketNum) {
+        $('#PreviewEdit').html("");
+        $('#PreviewAdd').html("");
+        $('#PreviewCodeReview').html("");
+        $('#PreviewIssueReview').html("");
+        $('#PreviewProjectConcern').html("");
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("LoadTest", "SARequest")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewLoadTest').html(data);
+                $('#myLoadTestModal').modal('show');
             }
         });
      };
 
-    function CloseModals() {
-        $('#myAddModal').modal('hide');
-        $('#myEditModal').modal('hide');
+    function OpenIssueReviewModal(ticketNum) {
+        $('#PreviewEdit').html("");
+        $('#PreviewAdd').html("");
+        $('#PreviewCodeReview').html("");
+        $('#PreviewLoadTest').html("");
+        $('#PreviewProjectConcern').html("");
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("IssueReview", "SARequest")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewIssueReview').html(data);
+                $('#myIssueReviewModal').modal('show');
+            }
+        });
     };
 
-    function CloseEditModal() {
-        $('#myEditModal').modal('hide');
+    function OpenProjectConcernModal(ticketNum) {
+        $('#PreviewEdit').html("");
+        $('#PreviewAdd').html("");
+        $('#PreviewCodeReview').html("");
+        $('#PreviewLoadTest').html("");
+        $('#PreviewIssueReview').html("");
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("ProjectConcern", "SARequest")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewProjectConcern').html(data);
+                $('#myProjectConcernModal').modal('show');
+            }
+        });
+    };
 
+
+    ///future delete
+    function CloseInitialModals() {
+        $('#myAddModal').modal('hide');
+        $('#myEditModal').modal({ closable: true });
+        $('#myEditModal').modal('hide');
+        $('#myCodeReviewModal').modal('hide');
+        $('#myLoadTestModal').modal('hide');
+        $('#myIssueReviewModal').modal('hide');
+        $('#myProjectConcernModal').modal('hide');
+    };
+
+
+    function OpenSAFeasibilityReview(ticketNum) {
+        top.location.href = '@Url.Action("EditFeasibilityReview", "Feasibility")?ticketNum=' + ticketNum
+    };
+
+    function OpenRequestorFeasibilityReview(ticketNum) {
+        top.location.href = '@Url.Action("ViewFeasibilityReview", "Feasibility")?ticketNum=' + ticketNum
     };
 </script>
-<div class="se-pre-con"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Loading Requests...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+<div class="se-pre-con"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Loading Requests...</h1><br /><img src="~/img/indicators/loading.gif" alt="loading" /></div></div>
+<hr />
 
 @{
     if (Model.Requests.Count() == 0)
     {
-        <hr />
-        <div class="info-text-lg text-center col-12">We could not find any requests!</div>
+        <div class="ui container" style="padding:20px 0px 10px 0px; width:100% !important">
+            <h2 style="text-align: center;">We could not find any requests!</h2>
+        </div>
     }
     else
     {
-        <div id="requestContainer">
+        <div id="requestContainer" class="ui cards" style="padding:0px 10px 0px 10px">
+            
             @{
+            var x = 0;
+           
                 foreach (var request in Model.Requests)
-                {
+                { 
+                    x = x + 1;
+            var RequestName = "request" + x;
                     var profileImage_SA = "/img/PersonPlaceholder.png";
                     var profileImage_requestor = "/img/PersonPlaceholder.png";
                     //try
@@ -93,15 +304,15 @@
                     //    }
                     //}
                     //catch { }
-                    <div class="shadow bg-white rounded childDiv" style="padding:0px 0px 0px 0px !important; border-spacing:0px !important;" id="request1">
-                        <table width="100%">
-                            <tr>
-                                <td style="padding: 0px !important; width:15%">
-                                    <div class="info-text" style="padding:5px 0px 5px 8px">Ticket #: @request.TicketNumber</div>
-                                </td>
-                                <td style="padding: 0px !important">
-                                    <div>
-                                        @{
+                    <div class="ui one card fluid" style="box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; border:none !important" id="@RequestName">
+                                    <table style="border-spacing:0px !important; width:100% !important">
+                                        <tr>
+                                            <td style="padding: 0px !important; width:414px; min-width:400px">
+                                                <div class="info-text" style="padding:5px 0px 5px 8px">Ticket #: @request.TicketNumber</div>
+                                            </td>
+                                            <td style="padding: 0px !important">
+                                                <div>
+                                                    @{
                                             DateTime requested = request.RequestDate;
                                             DateTime today = DateTime.Now;
                                             var numberOfDays = today.Subtract(requested).TotalDays;
@@ -124,203 +335,407 @@
                                             }
 
 
-                                        }
-                                        <span class="alert-heading">@request.ProjectName</span><span class="info-text"> submitted @result ago</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 0px !important">
-                                    @{
-                                        StatusModel status = Model.Status.Where(x => x.ID.Equals(request.RequestStatus)).FirstOrDefault();
-                                        <div class="alert-custom @status.Class shadow-sm">@status.Text</div>
-                                    }
-                                </td>
-                                <td style="padding: 0px !important">
-                                    <div>
-                                        <span class="info-text-lg">
-                                            @{
-                                                var descLength = 100;
-                                                var showExt = "<span>...</span>";
-                                                if (request.RequestDesc != null)
-                                                {
-                                                    if (request.RequestDesc.Length < 100)
-                                                    {
-                                                        descLength = request.RequestDesc.Length;
-                                                        showExt = "";
                                                     }
-                                                    @Html.Raw(request.RequestDesc.Substring(0, descLength) + showExt)
-                                                }
-                                            }
-                                        </span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:10px 0px 0px 0px" colspan="2">
-                                    <table class="info-panel" width="100%">
-                                        <tr>
-                                            <td class="info-panel-border-right" width="100">
-                                                <button type="button" class="btn btn-light" onclick="OpenEditModal(@request.TicketNumber)"><i class="material-icons">more_horiz</i></button>
-                                            </td>
-                                            <td class="info-panel-border-right" width="150">
-                                                <div class="info-text">Projector Code</div>
-                                                <div class="info-text-lg">@request.ProjectorCode</div>
-                                            </td>
-                                            <td class="info-panel-border-right" width="200">
-                                                <div class="info-text">Due</div>
-                                                <div class="info-text-bold">
-                                                    @{
-                                                        if (request.RequestType == 4)
-                                                        {
-                                                            if (request.RequestStatus <= 5)
-                                                            {
-                                                                @request.FeasibilityReviewDate.Value.ToShortDateString();
-                                                            }
-                                                            else if (request.RequestStatus == 6)
-                                                            {
-                                                                @request.InitiationReviewDate.Value.ToShortDateString();
-                                                            }
-                                                            else if (request.RequestStatus == 7)
-                                                            {
-                                                                @request.ImplementationReviewDate.Value.ToShortDateString();
-                                                            }
-                                                        }
-                                                        else if (request.RequestType == 3)
-                                                        {
-                                                            @request.IssueReviewDate.Value.ToShortDateString();
-                                                        }
-                                                        else if (request.RequestType == 2)
-                                                        {
-                                                            @request.TestTime.Value.ToString("MM/dd/yyyy hh:mm tt", System.Globalization.CultureInfo.InvariantCulture)
-                                                        }
-                                                        else
-                                                        {
-                                                            if (request.RequestReviewDate != null)
-                                                            {
-                                                                @request.RequestReviewDate.Value.ToShortDateString();
-                                                            }
-                                                        }
-                                                    }
+                                                    <span class="alert-heading">@Html.Raw(request.ProjectName)</span><span class="info-text"> submitted @result ago</span>
                                                 </div>
                                             </td>
-                                            <td class="info-panel-border-right" width="250">
-                                                <table style="padding: 0px 0px 0px 0px">
-                                                    <tr>
-                                                        <td>
-                                                            <img class="btn-sm" height="38" width="45" src="@profileImage_requestor" style="border-radius:50%;" />
-                                                        </td>
-                                                        <td>
-                                                            <div class="info-text">Requestor</div>
-                                                            <div class="info-text-bold">@request.RequestorName</div>
-                                                        </td>
-                                                    </tr>
-                                                </table>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0px !important; width:80px !important">
+                                                @{
+                                        StatusModel status = Model.Status.Where(x => x.ID.Equals(request.RequestStatus)).FirstOrDefault();
+                                                    <div class="alert-custom @status.Class shadow-sm">@status.Text</div>
+                                                }
                                             </td>
-                                            <td class="info-panel-border-right" width="200">
-                                                <table style="padding: 0px 0px 0px 0px">
+                                            <td style="padding: 0px !important">
+                                                <div>
+                                                    <span class="info-text-lg">
+                                                        @{
+                                                var descLength = 100;
+                                                var showExt = "<span>...</span>";
+                                                if (request.RequestType >= 4)
+                                                {
+                                                    if (request.Requirements != null)
+                                                    {
+                                                        var fullDesc = HttpUtility.HtmlDecode(request.Requirements).ToString();
+                                                        fullDesc = Regex.Replace(fullDesc, @"<[^>]+>|&nbsp;", "").Trim();
+
+                                                        if (fullDesc.Length < 100)
+                                                        {
+                                                            descLength = fullDesc.Length;
+                                                            showExt = "";
+                                                        }
+                                                            @Html.Raw(fullDesc.Substring(0, descLength) + showExt)
+                                                    }
+                                                    else
+                                                    {
+                                                        if (request.RequestDesc != null)
+                                                        {
+                                                            var fullDesc = HttpUtility.HtmlDecode(request.RequestDesc).ToString();
+                                                            fullDesc = Regex.Replace(fullDesc, @"<[^>]+>|&nbsp;", "").Trim();
+
+                                                            if (fullDesc.Length < 100)
+                                                            {
+                                                                descLength = fullDesc.Length;
+                                                                showExt = "";
+                                                            }
+                                                            @Html.Raw(fullDesc.Substring(0, descLength) + showExt)
+                                                        }
+                                                    }
+                                                }
+                                                        }
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:10px 0px 0px 0px" colspan="2">
+                                                <table class="info-panel" style="width:100% !important">
                                                     <tr>
-                                                        <td>
-                                                            <img class="btn-sm" height="38" width="45" src="@profileImage_SA" style="border-radius:50%;" />
-                                                        </td>
-                                                        <td>
-                                                            <div class="info-text">Assigned To</div>
+                                                        <td class="info-panel-border-right" style="width:100px !important">
                                                             @{
-                                                                if (request.AssignedSA == null || request.AssignedSA == "")
+                                                                string adminUser = Context.Session.GetString("AdminUser");
+                                                                string ecUser = Context.Session.GetString("ECUser");
+                                                                string PSArchitect = Context.Session.GetString("PSArchitect");
+                                                                string SMEUser = Context.Session.GetString("SMEUser");
+                                                                string viewType = Context.Session.GetString("ViewType");
+
+                                                                if ((adminUser == "True" || ecUser == "True" || SMEUser == "True") && viewType != "User")
                                                                 {
-                                                                    <div class="info-text-bold" style="color:red">Unassigned</div>
+                                                                    if (request.RequestType == 1)
+                                                                    {
+                                                                        <button type="button" class="ui button" style="background-color: #f0f0f0;" onclick="OpenCodeReviewModal(@request.TicketNumber)"><i class="icon ellipsis horizontal"></i></button>
+                                                                    }
+                                                                    else if (request.RequestType == 2)
+                                                                    {
+                                                                            <button type="button" class="ui button" style="background-color: #f0f0f0;" onclick="OpenLoadTestModal(@request.TicketNumber)"><i class="icon ellipsis horizontal"></i></button>
+                                                                    }
+                                                                    else if (request.RequestType == 3  || request.RequestType > 99)
+                                                                    {
+                                                                            <button type="button" class="ui button" style="background-color: #f0f0f0;" onclick="OpenIssueReviewModal(@request.TicketNumber)"><i class="icon ellipsis horizontal"></i></button>
+                                                                    }
+                                                                    else if (request.RequestType == 5)
+                                                                    {
+                                                                            <button type="button" class="ui button" style="background-color: #f0f0f0;" onclick="OpenProjectConcernModal(@request.TicketNumber)"><i class="icon ellipsis horizontal"></i></button>
+                                                                    }
+                                                                    else if (request.RequestType == 4 || request.RequestType == 6 || request.RequestType == 7 || request.RequestType == 8)
+                                                                    {
+                                                                            <button type="button" class="ui button" style="background-color: #f0f0f0;" onclick="OpenSAFeasibilityReview(@request.TicketNumber)"><i class="icon ellipsis horizontal"></i></button>
+                                                                    }
                                                                 }
                                                                 else
                                                                 {
-                                                                    <div class="info-text-bold">@request.AssignedSAName</div>
+                                                                    if (request.RequestType == 4 || request.RequestType == 6 || request.RequestType == 7 || request.RequestType == 8)
+                                                                    {
+                                                                            <button type="button" class="ui button" style="background-color: #f0f0f0;" onclick="OpenRequestorFeasibilityReview(@request.TicketNumber)"><i class="icon ellipsis horizontal"></i></button>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                            <button type="button" class="ui button" style="background-color: #f0f0f0;" onclick="OpenEditModal(@request.TicketNumber)"><i class="icon ellipsis horizontal"></i></button>
+                                                                    }
                                                                 }
                                                             }
                                                         </td>
-                                                    </tr>
-                                                </table>
-                                            </td>
-                                            <td class="info-panel-border-right" width="300">
-                                                @{
+                                                        <td class="info-panel-border-right" style="width:170px !important">
+                                                            <div class="info-text">Projector Code</div>
+                                                            <div class="info-text-lg">@request.ProjectorCode</div>
+                                                        </td>
+                                                        <td class="info-panel-border-right" style="width:220px !important">
+                                                            <div class="info-text">Due</div>
+                                                            <div class="info-text-bold">
+                                                                @{
+                                                        try
+                                                        {
+                                                            if (request.RequestType >= 4)
+                                                            {
+                                                                //if (request.RequestStatus <= 5)
+                                                                //{
+                                                                @request.RequestReviewDate.Value.ToShortDateString();
+                                                                @*}
+                                                                    else if (request.RequestStatus == 6)
+                                                                    {
+                                                                        @request.InitiationReviewDate.Value.ToShortDateString();
+                                                                    }
+                                                                    else if (request.RequestStatus == 7)
+                                                                    {
+                                                                        @request.ImplementationReviewDate.Value.ToShortDateString();
+                                                                    }*@
+                                                            }
+                                                            else if (request.RequestType == 2)
+                                                            {
+                                                                @request.TestTime.Value.ToString("MM/dd/yyyy hh:mm tt", System.Globalization.CultureInfo.InvariantCulture)
+                                                            }
+                                                            else
+                                                            {
+                                                                if (request.RequestReviewDate != null)
+                                                                {
+                                                                    @request.RequestReviewDate.Value.ToShortDateString();
+                                                                }
+                                                            }
+                                                        }
+                                                        catch { }
+                                                                }
+
+                                                            </div>
+                                                        </td>
+                                                        <td class="info-panel-border-right" style="min-width:200px; width:275px !important">
+                                                            <table style="padding: 0px 0px 0px 0px">
+                                                                <tr>
+                                                                    <td>
+                                                                        <img class="btn-sm" alt="Requestor" height="35" width="35" src="@profileImage_requestor" style="border-radius:50%;" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="info-text">Requestor</div>
+                                                                        <div class="info-text-bold">@request.RequestorName</div>
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td class="info-panel-border-right" style="min-width:200px;width:275px !important">
+                                                            <table style="padding: 0px 0px 0px 0px">
+                                                                <tr>
+                                                                    <td>
+                                                                        <img class="btn-sm" alt="SA" height="35" width="35" src="@profileImage_SA" style="border-radius:50%;" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="info-text">Assigned To</div>
+                                                                        @{
+                                                                if (request.AssignedSA == null || request.AssignedSA == "")
+                                                                {
+                                                                            <div class="info-text-bold" style="color:red">Unassigned</div>
+                                                                }
+                                                                else
+                                                                {
+                                                                            <div class="info-text-bold">@request.AssignedSAName</div>
+                                                                }
+                                                                        }
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td class="info-panel-border-right" style="min-width:250px; width:350px !important">
+                                                            <div class="info-text">Request Type</div>
+                                                            @{
                                                     try
                                                     {
-                                                        RequestTypeModel requestType = Model.RequestTypes.Where(x => Convert.ToInt32(x.RequestType) == Convert.ToInt32(request.RequestType)).FirstOrDefault();
-                                                        <div class="info-text">Request Type</div>
-                                                        <div class="info-text-lg">@requestType.RequestName</div>
-
+                                                        if (request.RequestType == 4)
+                                                        {
+                                                            <div class="info-text-lg">Feasibility Review</div>
+                                                        }
+                                                        else if (request.RequestType == 6)
+                                                        {
+                                                            <div class="info-text-lg">Initiation Review</div>
+                                                        }
+                                                        else if (request.RequestType == 7)
+                                                        {
+                                                            <div class="info-text-lg">Implementation Review</div>
+                                                        }
+                                                        else if (request.RequestType == 8)
+                                                        {
+                                                            <div class="info-text-lg">Post Initial Build Review</div>
+                                                        }
+                                                        else
+                                                        {
+                                                            RequestTypeModel requestType = Model.RequestTypes.Where(x => Convert.ToInt32(x.RequestType) == Convert.ToInt32(request.RequestType)).FirstOrDefault();
+                                                            <div class="info-text-lg">@requestType.RequestName</div>
+                                                        }
                                                     }
                                                     catch
                                                     {
-                                                        <div class="info-text">Request Type</div>
                                                         <div class="info-text-lg">Unknown Request</div>
                                                     }
                                                 }
                                             </td>
-                                            <td class="info-panel-border-right" width="250">
+                                            <td class="info-panel-border-right" width="250" style="vertical-align:middle; min-width:200px">
                                                 @{
                                                     try
                                                     {
                                                         CarrierModel carrier = Model.Carriers.Where(x => x.CarrierId.Equals(request.CarrierId)).FirstOrDefault();
-                                                        <img src="@carrier.CarrierLogo" height="40" width="40" /> <span class="info-text">@carrier.CarrierName</span>
+                                                        <img src="@carrier.CarrierLogo" height="40" width="48" style="vertical-align:middle; padding:0px 8px 0px 0px" loading="lazy" /> <span class="info-text">@carrier.CarrierName</span>
 
                                                     }
                                                     catch
                                                     {
-                                                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png" height="40" width="40" /> @Html.Raw("Unidentified Carrier");
+                                                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png" height="40" width="40" style="vertical-align:middle; padding:0px 8px 0px 0px" /> @Html.Raw("Unidentified Carrier");
                                                     }
                                                 }
                                             </td>
-                                            <td width="40%" style="padding-left:10px">
-                                                <div class="info-text">Progress</div>
-                                                @{
-                                                    AlertModel alerts = Model.Alerts.Where(a => a.AlertId.Equals(request.AlertType)).FirstOrDefault();
+
+                                            @{
+                                                if (viewType == "EC")
+                                                {
+                                                    var staffing = @request.NeedsStaffing;
+                                                    if (staffing == "on" || staffing == "Yes")
+                                                    {
+                                                        staffing = "Yes";
+                                                    }
+                                                    else
+                                                    {
+                                                        staffing = "No";
+                                                    }
+                                                    <td class="info-panel-border-right" style="width:170px !important">
+                                                        <div class="info-text">Needs Staffing</div>
+                                                        <div class="info-text-lg">@staffing</div>
+                                                    </td>
                                                 }
-                                                @Html.Raw(alerts.AlertClass)
+                                                        }
+                                                    <td style="padding-left:10px;width:800px !important">
+                                                        @*<div class="info-text">Progress</div>*@
+                                                        @{
+                                                    ProgressModel progress = Model.Progress.Where(a => a.ProgressId.Equals(request.ProgressType)).FirstOrDefault();
+                                                    if (request.RequestStatus == 12)
+                                                    {
+                                                            @Html.Raw(progress.ProgressClass.Replace("bg-primary", "bg-warning"))
+                                                    }
+                                                    else
+                                                    {
+                                                            @Html.Raw(progress.ProgressClass)
+                                                    }
+                                                        }
+                                                    </td>
+                                                    </tr>
+                                                </table>
                                             </td>
                                         </tr>
                                     </table>
-                                </td>
-                            </tr>
-                        </table>
                     </div>
-                    <br />
                 }
             }
         </div>
     }
 }
 
-<div class="modal hide fade" id="myAddModal" aria-labelledby="myAddModal" aria-hidden="true" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form asp-action="AddRequest" asp-controller="Home" method="POST" data-ajax="true" data-ajax-update="myAddModal" id="frmRequest">
-                <div class="modal-header" style="padding:10px 20px 0px 20px;">
-                    <h5 class="modal-title" id="modalAddTitle">Create New Request</h5>
-                    <button type="button" class="close" onclick="CloseModals();" style="color:white;">&times;</button>
-                </div>
-                <div class="modal-body" id="PreviewAdd">
+<div class="ui modal" id="myAddModal" aria-labelledby="myAddModal" aria-hidden="true">
+    <i class="close small icon" style="color:white !important"></i>
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalAddTitle" style="color:white">Create New Request</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"></div>
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="AddRequest" asp-controller="Request" method="POST" class="ui small form" data-ajax="true" data-ajax-update="myAddModal" id="frmRequest">
+            <div class="modal-body" id="PreviewAdd">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                <button type="button" class="ui positive basic button approved" id="btnAddRequest">Submit Request!</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="ui modal" id="myEditModal">
+    <i class="close small icon" style="color:white !important"></i>
+    <div class="header" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalEditTitle" style="color:white">Update Request</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="ui top aligned inverted blurring" id="modEditHide">
+            <form asp-action="EditRequest" asp-controller="Request" method="POST" class="ui small form" data-ajax="true" data-ajax-update="myEditModal" id="frmEditRequest">
+                <div class="modal-body" id="PreviewEdit">
                     @*PartialView*@
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-outline-success">Submit Request!</button>
+                <div class="ui grid">
+                    <div class="twelve wide column actions">
+                        <button type="button" class="ui positive basic button approved">Update Request!</button>
+                    </div>
+                    <div class="four wide column align right">
+                        <button type="button" id="DeleteButton" value="DeleteRequest" onclick="DeleteRequestModal();" class="ui negative basic button deny">Delete Request</button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal hide fade" id="myEditModal" aria-labelledby="myEditModal" aria-hidden="true" role="dialog" style="z-index:2000">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form asp-action="EditRequest" asp-controller="Home" method="POST" data-ajax="true" data-ajax-update="myEditModal" id="frmEditRequest">
-                <div class="modal-header" style="padding:10px 20px 0px 20px;">
-                    <h5 class="modal-title" id="modalEditTitle">Update Request</h5>
-                    <button type="button" class="close" onclick="CloseModals();" style="color:white;">&times;</button>
-                </div>
-                <div class="modal-body" id="PreviewEdit">
+
+<div class="ui modal" id="myCodeReviewModal" aria-labelledby="myCodeReviewModal" aria-hidden="true">
+    <i class="small icon close" style="color:white !important"></i>
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalCodeReviewTitle" style="color:white">Web Service Code Review</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="ui top aligned inverted blurring" id="modCodeReviewHide">
+            <form asp-action="UpdateCodeReview" asp-controller="SAController" class="ui small form" method="POST" data-ajax="true" data-ajax-update="myCodeReviewModal" id="frmUpdateCodeReview">
+                <div class="modal-body" id="PreviewCodeReview">
                     @*PartialView*@
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-outline-success">Update Request!</button>
+                <hr />
+                <div class="actions">
+                    <button type="button" class="ui positive basic button approved">Update Request!</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="myLoadTestModal" aria-labelledby="myLoadTestModal">
+    <i class="small icon close" style="color:white !important"></i>
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalWebServiceTitle" style="color:white">Web Service Load Test</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="ui top aligned inverted blurring" id="modLoadTestHide">
+            <form asp-action="UpdateLoadTest" asp-controller="SAController" method="POST" class="ui small form" id="frmUpdateLoadTest">
+                <div class="modal-body" id="PreviewLoadTest">
+                    @*PartialView*@
+                </div>
+                <hr />
+                <div class="actions" style="padding:10px 0px 0px 0px">
+                    <button type="button" class="ui positive basic button approved">Update Request!</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="myIssueReviewModal" aria-labelledby="myIssueReviewModal">
+    <i class="close small icon" style="color:white !important"></i>
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalProjectIssueTitle" style="color:white">Project Issue Review</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="ui top aligned inverted blurring" id="modIssueHide">
+            <form asp-action="UpdateIssueReview" asp-controller="SAController" method="POST" class="ui small form" id="frmUpdateIssueReview">
+                <div class="modal-body" id="PreviewIssueReview">
+                    @*PartialView*@
+                </div>
+                <hr />
+                <div class="actions" style="padding:10px 0px 0px 0px">
+                    <button type="button" class="ui positive basic button approved">Update Request!</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="myProjectConcernModal" aria-labelledby="myProjectConcernModal" aria-hidden="true">
+    <i class="close small icon" style="color:white !important"></i>
+
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalProjectAlertTitle" style="color:white">Project Concern/Alert</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="ui top aligned inverted blurring" id="modConcernHide">
+            <form asp-action="UpdateProjectConcern" asp-controller="SAController" method="POST" class="ui small form" data-ajax="true" data-ajax-update="myProjectConcernModal" id="frmUpdateProjectConcern">
+                <div class="modal-body" id="PreviewProjectConcern">
+                    @*PartialView*@
+                </div>
+                <hr />
+                <div class="actions">
+                    <button type="button" class="ui positive basic button approved">Update Request!</button>
                 </div>
             </form>
         </div>

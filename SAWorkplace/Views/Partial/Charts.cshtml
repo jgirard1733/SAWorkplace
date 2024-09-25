@@ -1,0 +1,284 @@
+﻿@model SAWorkplace.Models.RequestDisplayModel
+@using Microsoft.AspNetCore.Http;
+
+<script>
+    $(document).ready(function () {
+        $(".se-pre-con").fadeOut("slow");
+    });
+</script>
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+<script type="text/javascript">
+    google.load("visualization", "1", { packages: ["corechart"] });
+    google.setOnLoadCallback(drawChart1);
+
+    function drawChart1() {
+
+        //get number of tickets per Request Type
+        var n1 = @Model.Requests.Where(x => x.RequestType == 1).Count(); //webservice code review
+        var n2 = @Model.Requests.Where(x => x.RequestType == 2).Count(); //load test
+        var n3 = @Model.Requests.Where(x => x.RequestType == 3).Count(); //project issue
+        var n4 = @Model.Requests.Where(x => x.RequestType == 4).Count(); //Feasibility
+        var n5 = @Model.Requests.Where(x => x.RequestType == 5).Count(); //concern
+        var n6 = @Model.Requests.Where(x => x.RequestType == 6).Count(); //initiation
+        var n7 = @Model.Requests.Where(x => x.RequestType == 7).Count(); //implementation
+        var n100 = @Model.Requests.Where(x => x.RequestType == 100).Count(); //ACORD DD
+        var n200 = @Model.Requests.Where(x => x.RequestType == 200).Count(); //AWS
+        var n300 = @Model.Requests.Where(x => x.RequestType == 300).Count(); //Base
+        var n400 = @Model.Requests.Where(x => x.RequestType == 400).Count(); //DevOps
+        var n500 = @Model.Requests.Where(x => x.RequestType == 500).Count(); //DTC
+        var n600 = @Model.Requests.Where(x => x.RequestType == 600).Count(); //eSig
+        var n700 = @Model.Requests.Where(x => x.RequestType == 700).Count(); //Foundations Standards
+        var n800 = @Model.Requests.Where(x => x.RequestType == 800).Count(); //Go No Go
+        var n900 = @Model.Requests.Where(x => x.RequestType == 900).Count(); //JavaScript
+        var n1000 = @Model.Requests.Where(x => x.RequestType == 1000).Count(); //Medical Vendors
+        var n1100 = @Model.Requests.Where(x => x.RequestType == 1100).Count(); //NGSD
+        var n1200 = @Model.Requests.Where(x => x.RequestType == 1200).Count(); //Security
+        var n1300 = @Model.Requests.Where(x => x.RequestType == 1300).Count(); //UX
+        var n1400 = @Model.Requests.Where(x => x.RequestType == 1400).Count(); //WS
+
+        var data = google.visualization.arrayToDataTable([
+            ['Requests', 'Type', 'Open Tickets'],
+            ['WS Code Review', 1, n1],
+            ['WS Load Test', 2, n2],
+            ['Project Issue Support', 3, n3],
+            ['Project Concern/Alert', 5, n5],
+            ['Feasibility Review', 4, n4],
+            ['Initiation Review', 6, n6],
+            ['Implementation Review', 7, n7],
+            ['ACORD/Data Dictionary', 100, n100],
+            ['AWS', 200, n200],
+            ['Base Issue/Question', 300, n300],
+            ['DevOps', 400, n400],
+            ['DTC', 500, n500],
+            ['eSignature', 600, n600],
+            ['Foundations/Standards', 700, n700],
+            ['Go/No Go', 800, n800],
+            ['JavaScript', 900, n900],
+            ['Medical Vendor (MRAS, SwissRe, etc)', 1000, n1000],
+            ['NGSD', 1100, n1100],
+            ['Security', 1200, n1200],
+            ['UI/UX', 1300, n1300],
+            ['Web Services', 1400, n1400]
+        ]);
+
+        var view = new google.visualization.DataView(data);
+        view.setColumns([0, 2]);
+
+        var filterType = '@Context.Session.GetString("FilterType")';
+
+        if (filterType.startsWith("Feas")) {
+            if (filterType == "FeasOpen")
+                filterType = "Open Feasibility";
+            else
+                filterType = "All Feasibility";
+        }
+
+        if (filterType != "") filterType += " ";
+
+        console.log("filterType = " + filterType)
+
+        var options = {
+            title: filterType + 'Requests'
+        };
+
+        var chart = new google.visualization.PieChart(
+            document.getElementById('chartRequests'));
+        chart.draw(view, options);
+
+        var selectHandler = function (e) {
+            var type = data.getValue(chart.getSelection()[0]['row'], 1);
+            top.location.href = '/Request?filter=rID_' + type;
+        }
+        google.visualization.events.addListener(chart, 'select', selectHandler);
+    }
+</script>
+
+<script type="text/javascript">
+    google.load("visualization", "1", { packages: ["corechart"] });
+    google.setOnLoadCallback(drawChart2);
+
+    function drawChart2() {
+
+        var data = new google.visualization.DataTable();
+
+        data.addColumn('string', 'Status');
+        data.addColumn('number', 'ID');
+        data.addColumn('number', 'Requests');
+
+        var a, b, c;
+
+        @foreach (var d in Model.Status)
+        {
+            @:a = "@d.Text";
+            @:b = @d.ID;
+            @:c = @Model.Requests.Where(x => x.RequestStatus == d.ID).Count();
+
+            @:data.addRows([[a, b, c]]);
+        }
+
+        var view = new google.visualization.DataView(data);
+        view.setColumns([0, 2]);
+
+        var filterType = '@Context.Session.GetString("FilterType")';
+        if (filterType.startsWith("Feas")) {
+            if (filterType == "FeasOpen")
+                filterType = "Open Feasibility";
+            else
+                filterType = "All Feasibility";
+        }
+        if (filterType != "") filterType += " ";
+
+        var options = {
+            title: filterType + 'Statuses'
+        };
+
+        var chart = new google.visualization.PieChart(
+            document.getElementById('chartStatus'));
+        chart.draw(view, options);
+
+        var selectHandler = function (e) {
+            var type = data.getValue(chart.getSelection()[0]['row'], 1);
+            top.location.href = '/Request?filter=sID_' + type;
+        }
+
+        google.visualization.events.addListener(chart, 'select', selectHandler);
+    }
+</script>
+
+<script type="text/javascript">
+    google.load("visualization", "1", { packages: ["corechart"] });
+    google.setOnLoadCallback(drawChart3);
+
+    function drawChart3() {
+
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Carrier');
+        data.addColumn('number', 'ID');
+        data.addColumn('number', 'Requests');
+
+        var emptyData = new google.visualization.DataTable();
+        emptyData.addColumn('string', 'Carrier');
+        emptyData.addColumn('number', 'ID');
+        emptyData.addColumn('number', 'Requests');
+        //emptyData.addRows([[" ", 0, -1]]);
+
+        var a, b, c;
+
+        @foreach (var d in Model.Carriers)
+        {
+            @:a = "@d.CarrierName";
+            @:b = @d.CarrierId;
+            @:c = @Model.Requests.Where(x => x.CarrierId == d.ID).Count();
+
+            @:a = a.replace("&amp;", "&");
+
+            @:if (c === 0)
+                @:emptyData.addRows([[a, b, 1]]);
+            @:else
+                @:data.addRows([[a, b, c]]);
+        }
+
+        //emptyData.addRows([[" ", 999, 1]]);
+
+
+        var view = new google.visualization.DataView(data);
+        //view.setColumns([0, 2]);
+        view.setColumns([0, 2,
+            {
+                calc: "stringify",
+                sourceColumn: 2,
+                type: "string",
+                role: "annotation"
+            }
+          ]);
+
+        var filter = '@Context.Session.GetString("FilterType")';
+
+        var filterText = filter.trim();
+
+        if (filter != "") filterText += " ";
+
+        var chart_title = "Carriers";
+
+        if (filter.trim() == "All")
+            chart_title = "All Carriers with Requests";
+        else
+            chart_title = "Carriers with " + filterText + "Requests";
+
+        if (filter.startsWith("My")) {
+            chart_title = "My Carriers with " + filterText.replace("My ","") + "Requests";
+        }
+
+        if (filter.startsWith("Feas")) {
+            if (filter.trim() == "FeasOpen") {
+                filterText = "Open Feasibility Reviews";
+                chart_title = "Carriers with " + filterText;
+            }
+            else {
+                filterText = "Feasibility Reviews";
+                chart_title = "All Carriers with " + filterText;
+            }
+        }
+
+        var options = {
+            title: chart_title,
+            height: 1400,
+            width: 900,
+            bar: { groupWidth: "75%" },
+        };
+
+        var chart = new google.visualization.BarChart(
+            document.getElementById('chartCarrier'));
+        chart.draw(view, options);
+
+        var selectHandler = function (e) {
+            var type = data.getValue(chart.getSelection()[0]['row'], 1);
+            top.location.href = '/Request?filter=carrierID_' + type;
+        }
+        google.visualization.events.addListener(chart, 'select', selectHandler);
+
+
+        var viewType = '@Context.Session.GetString("ViewType")';
+        if ((viewType == "Admin" || viewType == "EC") && (filter == "Open" || filter == "All" || filter.startsWith("Feas"))) 
+        {
+            var emptyView = new google.visualization.DataView(emptyData);
+            emptyView.setColumns([0, 2]);
+
+            var echart_title = "Carriers with Zero Requests";
+            if (filter == "Open")
+                echart_title = "Carriers with Zero Open Requests";
+            else if (filter.startsWith("Feas"))
+                echart_title = "Carriers with Zero " + filterText;
+
+            var emptyOptions = {
+                title: echart_title,
+                pieSliceText: 'label',
+            };
+
+            var emptyChart = new google.visualization.PieChart(
+                document.getElementById('chartEmpty'));
+            emptyChart.draw(emptyView, emptyOptions);
+        }
+    }
+</script>
+
+<div class="se-pre-con"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Loading Allocation...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+<div id="chartContainer">
+    <hr />
+    <div class="ui grid">
+        <div class="ui eight wide column">
+            <div id="chartRequests" style="width: 900px; height: 500px;"></div>
+        </div>
+        <div class="ui eight wide column">
+            <div id="chartStatus" style="width: 900px; height: 500px;"></div>
+        </div>
+        <div class="ui eight wide column">
+            <div id="chartCarrier" style="width: 900px; height: 1400px;"></div>
+        </div>
+        <div class="ui eight wide column">
+            <div id="chartEmpty" style="width: 900px; height: 800px;"></div>
+        </div>
+    </div>
+</div>

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace SAWorkplace.Models
 {
+
     public class RequestModel
     {
         [Key]
@@ -16,20 +17,30 @@ namespace SAWorkplace.Models
         public string RequestorName { get; set; }
         public string RequestorEmail { get; set; }
         public int CarrierId { get; set; }
+        public string CarrierName { get; set; }
         public string ProjectName { get; set; }
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}", ApplyFormatInEditMode = true)]
         public DateTime RequestDate { get; set; }
-        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}")]
-        public DateTime? FeasibilityReviewDate { get; set; }
-        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}")]
-        public DateTime? InitiationReviewDate { get; set; }
-        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}")]
-        public DateTime? ImplementationReviewDate { get; set; }
+
         [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}")]
         public DateTime? RequestReviewDate { get; set; }
+
         [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}")]
-        public DateTime? IssueReviewDate { get; set; }
+        public DateTime? FeasibilityReviewDate { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}")]
+        public DateTime? InitiationReviewDate { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}")]
+        public DateTime? ImplementationReviewDate { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}")]
+        public DateTime? InitBuildReviewDate { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}")]
+        public DateTime? FeasProdDate { get; set; }
+
         public string ProjectorCode { get; set; }
         public string RequestDesc { get; set; }
         public string AssignedSA { get; set; }
@@ -37,13 +48,28 @@ namespace SAWorkplace.Models
         public string AssignedSAEmail { get; set; }
         public int RequestStatus { get; set; }
         public string Requirements { get; set; }
-        public string SAInitialReview { get; set; }
-        public string SAFinalReview { get; set; }
         public string TFSPath { get; set; }
         public DateTime? TestTime { get; set; }
-        public int AlertType { get; set; }
+        public int ProgressType { get; set; }
         public int TicketNumber { get; set; }
         public string WebServiceURLs { get; set; }
+        public string Duration1 { get; set; }
+        public string Duration2 { get; set; }
+        public string DurationType1 { get; set; }
+        public string DurationType2 { get; set; }
+        public string OpportunityNameNumber { get; set; }
+        public string SpecialChallenge { get; set; }
+        public string Technology { get; set; }
+        public string ProjectType { get; set; }
+        public string NeedsStaffing { get; set; }
+        public string TeamMembers { get; set; }
+        public string SteelThread { get; set; }
+        public string SteelThreadDetail { get; set; }
+        public string eSig { get; set; }
+        public string Director { get; set; }
+        public string Splunk { get; set; }
+        public string NeedInitBuildReview { get; set; }
+        public string SANotes { get; set; }
     }
 
     public class RequestDisplayModel
@@ -57,9 +83,15 @@ namespace SAWorkplace.Models
         [NotMapped]
         public IEnumerable<StatusModel> Status { get; set; }
         [NotMapped]
-        public IEnumerable<AlertModel> Alerts { get; set; }
+        public IEnumerable<ProgressModel> Progress { get; set; }
         [NotMapped]
         public IEnumerable<RequestTypeModel> RequestTypes { get; set; }
+        [NotMapped]
+        public IEnumerable<DurationTypesModel> DurationTypes { get; set; }
+        [NotMapped]
+        public IEnumerable<TeamMembersModel> TeamMembers { get; set; }
+        [NotMapped]
+        public IEnumerable<TeamMembersModel> Director { get; set; }
     }
 
     public class RequestEditModel
@@ -73,12 +105,22 @@ namespace SAWorkplace.Models
         [NotMapped]
         public IEnumerable<StatusModel> Status { get; set; }
         [NotMapped]
-        public IEnumerable<AlertModel> Alerts { get; set; }
+        public IEnumerable<ProgressModel> Progress { get; set; }
         [NotMapped]
         public IEnumerable<RequestTypeModel> RequestTypes { get; set; }
         [NotMapped]
         public IEnumerable<DocumentModel> Documents { get; set; }
         [NotMapped]
         public IEnumerable<RequestHistoryModel> History { get; set; }
+        [NotMapped]
+        public IEnumerable<LoadTestModel> LoadTestResults { get; set; }
+        [NotMapped]
+        public IEnumerable<DurationTypesModel> DurationTypes { get; set; }
+        [NotMapped]
+        public IEnumerable<TeamMembersModel> TeamMembers { get; set; }
+        [NotMapped]
+        public IEnumerable<TeamMembersModel> Director { get; set; }
+        [NotMapped]
+        public FeasibilityReviewModel FeasForms { get; set; }
     }
 }

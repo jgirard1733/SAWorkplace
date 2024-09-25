@@ -1,0 +1,1152 @@
+﻿@using Microsoft.AspNetCore.Http;
+@model SAWorkplace.Models.RequestEditModel
+@using System.Text.RegularExpressions
+<style>
+    .trumbowyg-box, .trumbowyg-editor {
+        margin: 0px auto !important;
+        min-height: 150px !important;
+    }
+
+    .trumbowyg-editor, .trumbowyg-textarea {
+        font-size: 14px;
+        min-height: 150px !important;
+    }
+</style>
+<link rel="stylesheet" href="~/css/trumbowyg.colors.css" />
+<link rel="stylesheet" href="~/css/trumbowyg.min.css" />
+
+<script src="~/js/trumbowyg.min.js"></script>
+<script src="~/js/trumbowyg.colors.min.js"></script>
+<script src="~/js/trumbowyg.cleanpaste.min.js"></script>
+<script src="~/js/trumbowyg.allowtagsfrompaste.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(".se-pre-con").fadeOut("slow");
+         $('.ui.accordion').accordion();
+         var SA = '@Model.Requests.AssignedSA';
+
+        $('#SADropDown').dropdown({
+            onChange: function (text, value) {
+                var SAName = $('#Requests_AssignedSAName');
+                var SAEmail = $('#Requests_AssignedSAEmail');
+
+                if (text == 'jgirard') {
+                    SAName.val('Jim Girard');
+                    SAEmail.val('jgirard@ipipeline.com');
+                }
+                else if (text == 'mcain') {
+                    SAName.val('Matt Cain');
+                    SAEmail.val('mcain@ipipeline.com');
+                }
+                else if (text == 'dolsen') {
+                    SAName.val('Darnae Olsen');
+                    SAEmail.val('dolsen@ipipeline.com');
+                }
+            }
+        }).dropdown('set selected', SA);
+
+        $("#Requests_AssignedSA").dropdown();
+        $('#Requests_RequestType').dropdown();
+        $('#Requests_RequestStatus').dropdown();
+
+        $('#Requests_SANotes').trumbowyg({
+            btns: [
+                ['formatting'],
+                ['strong'],
+                ['emphasis'],
+                ['link'],
+                ['insertImage'],
+                ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+                ['unorderedList', 'orderedList'],
+                ['horizontalRule'],
+                ['fullscreen'],
+                ['foreColor']
+            ],
+            plugins: {
+                allowTagsFromPaste: {
+                    allowedTags: ['p', 'br', 'hr', 'strong']
+                }
+            }
+        });
+        @{
+            var notes = Html.Raw(Model.Requests.SANotes).ToString();
+            notes = notes.Replace("\r", "").Replace("\n", "").Replace("   ", "").Replace("\"", "'");
+        }
+        var saNotes = "@Html.Raw(notes)";
+
+        $('#Requests_SANotes').trumbowyg('html', saNotes);
+
+        @{
+            var formFlag = false;
+            var feasFormComplete = false;
+            var initFormComplete = false;
+            var implFormComplete = false;
+            var initBuildFormComplete = false;
+
+            var feasForm = @Model.FeasForms;
+
+            if (feasForm != null)
+            {
+                if (feasForm.Feas_ReviewDate != null) {
+                    feasFormComplete = true;
+                }
+                if (feasForm.Init_ReviewDate != null) {
+                    initFormComplete = true;
+                }
+                if (feasForm.Impl_ReviewDate != null) {
+                    implFormComplete = true;
+                }
+                if (feasForm.InitBuild_ReviewDate != null)
+                {
+                    initBuildFormComplete = true;
+                }
+                if (Model.Requests.RequestType == 4 && feasFormComplete == true) {
+                    formFlag = true;
+                }
+                else if (Model.Requests.RequestType == 6 && initFormComplete == true) {
+                    formFlag = true;
+                }
+                else if (Model.Requests.RequestType == 7 && implFormComplete == true) {
+                    formFlag = true;
+                }
+                else if (Model.Requests.RequestType == 8 && initBuildFormComplete == true)
+                {
+                    formFlag = true;
+                }
+            }
+        }
+
+        if ('@feasFormComplete' == "True") {
+            $('#btnFeasibilityForm').addClass('positive');
+            $('#btnFeasibilityForm').removeClass('blue');
+        }
+        if ('@initFormComplete' == "True") {
+            $('#btnInitiationForm').addClass('positive');
+            $('#btnInitiationForm').removeClass('blue');
+        }
+        if ('@implFormComplete' == "True") {
+            $('#btnImplementationForm').addClass('positive');
+            $('#btnImplementationForm').removeClass('blue');
+        }
+        if ('@initBuildFormComplete' == "True") {
+            $('#btnInitBuildForm').addClass('positive');
+            $('#btnInitBuildForm').removeClass('blue');
+        }
+
+        //filter the status list
+        $("#Requests_RequestStatus option[value='1']").remove(); //new
+        $("#Requests_RequestStatus option[value='8']").remove(); //new immediate
+        $("#Requests_RequestStatus option[value='9']").remove(); //fail
+        $("#Requests_RequestStatus option[value='10']").remove(); //pass
+
+        if (@Model.Requests.RequestType == 4) {
+            //Feasibility
+            $("#Requests_RequestStatus option[value='6']").remove(); //initiation
+            $("#Requests_RequestStatus option[value='7']").remove(); //implementation
+            $("#Requests_RequestStatus option[value='17']").remove(); //Post Initial Build
+        }
+        if (@Model.Requests.RequestType == 6) {
+            //Initiation
+            $("#Requests_RequestStatus option[value='5']").remove(); //feasibility
+            $("#Requests_RequestStatus option[value='7']").remove(); //implementation
+            $("#Requests_RequestStatus option[value='17']").remove(); //Post Initial Build
+        }
+        if (@Model.Requests.RequestType == 7) {
+            //Implementation
+            $("#Requests_RequestStatus option[value='5']").remove(); //feasibility
+            $("#Requests_RequestStatus option[value='6']").remove(); //initiation
+            $("#Requests_RequestStatus option[value='17']").remove(); //Post Initial Build
+        }
+        //Post Initial Build Review - new optional review step
+        if ('@Model.Requests.NeedInitBuildReview' == 'Yes' && @Model.Requests.RequestType == 8) {
+            $("#Requests_RequestStatus option[value='5']").remove(); //feasibility
+            $("#Requests_RequestStatus option[value='6']").remove(); //initiation
+            $("#Requests_RequestStatus option[value='7']").remove(); //implementation
+        }
+        if (@Model.Requests.RequestType == 12) {
+            //Addendum
+            $("#Requests_RequestStatus option[value='5']").remove(); //feasibility
+            $("#Requests_RequestStatus option[value='6']").remove(); //initiation
+            $("#Requests_RequestStatus option[value='7']").remove(); //implementation
+            $("#Requests_RequestStatus option[value='17']").remove(); //Post Initial Build
+        }
+
+        if (@Model.Requests.RequestStatus != 12) {
+            $("#Requests_RequestStatus option[value='12']").remove(); //addendum
+        }
+
+        var initBuild = '@Model.Requests.NeedInitBuildReview';
+        console.log("initBuild = " + initBuild);
+        if (initBuild == 'on' || initBuild == 'Yes') {
+            console.log("Requests_NeedInitBuildReview is checked");
+            $('#Requests_NeedInitBuildReview').prop("checked", true);
+            updateInitBuildSlider('Yes');
+        }
+        else if (initBuild == 'off' || initBuild == 'No') {
+            console.log("Requests_NeedInitBuildReview is unchecked");
+            $('#Requests_NeedInitBuildReview').prop("checked", false);
+            updateInitBuildSlider('No');
+        }
+
+        var staffing = '@Model.Requests.NeedsStaffing';
+        //console.log("staffing = " + staffing);
+        if (staffing == 'on' || staffing == 'Yes') {
+            //console.log("Requests_NeedsStaffing is checked");
+            $('#Requests_NeedsStaffing').prop("checked", true);
+            updateStaffSlider('Yes');
+        }
+        else if (staffing == 'off' || staffing == 'No') {
+            //console.log("Requests_NeedsStaffing is unchecked");
+            $('#Requests_NeedsStaffing').prop("checked", false);
+            updateStaffSlider('No');
+        }
+
+        var steel = '@Model.Requests.SteelThread';
+        //console.log("steel thread = " + steel);
+        if (steel == 'on' || steel == 'Yes') {
+            //console.log("Requests_SteelThread is on");
+            $('#Requests_SteelThread').prop("checked", true);
+            updateSteelSlider('Yes');
+            $('#Requests_SteelThreadDetail').show();
+            $('#lblSteelThreadDetail').show();
+        }
+        else if (steel == 'off' || steel == 'No') {
+            //console.log("Requests_SteelThread is off");
+            $('#Requests_SteelThread').prop("checked", false);
+            updateSteelSlider('No');
+            $('#Requests_SteelThreadDetail').hide();
+            $('#lblSteelThreadDetail').hide();
+        }
+
+        $('.customCollapse').on('shown.bs.collapse', function () {
+            $(this).parent().find(".material-icons").html();
+            $(this).parent().find(".material-icons").html("expand_more");
+        });
+
+        $('.customCollapse').on('hidden.bs.collapse', function () {
+                $(this).parent().find(".material-icons").html();
+                $(this).parent().find(".material-icons").html("expand_less");
+        });
+
+        $('#btnUpdateRequest').click(function () {
+            $('#btnTrueSubmit').click();
+        });
+
+        $('#btnMoveRequest').click(function () {
+            $('#submitType').val('1');
+            $('#btnTrueSubmit').click();
+        });
+
+        $('#frmEditFeasibilityReview').submit(function (e) {
+            scrollTo(0, 0);
+            $('#postMsg').removeClass('hide');
+            $('#postMsg').addClass('show');
+            e.preventDefault();
+            var formData = new FormData(this);
+            $.ajax({
+                url: '@Url.Action("EditFeasibility", "Feasibility")',
+                type: "POST",
+                dataType: "json",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (result) {
+                    if (result.success == true) {
+                        setTimeout(top.location.href = '/', 500);
+                    }
+                },
+                error: function (result) {
+                    console.log(result.responseText);
+                }
+            });
+            return false;
+        });
+
+        setMoveButton();
+
+        var team = '';
+        var teamMemberList = '@Model.Requests.TeamMembers';
+        var teamMembers = teamMemberList.split(',');
+        for (var i = 0; i < teamMembers.length; i++) {
+            var personalInfo = teamMembers[i].split(':');
+
+            team = (team + personalInfo[2] + ', ');
+        }
+        $('#spnTeamMembers').html(team.substring(0, team.length - 2));
+
+        var director = '';
+        var dirList = '@Model.Requests.Director';
+        var directors = dirList.split(',');
+        for (var d = 0; d < directors.length; d++) {
+            var dirInfo = directors[d].split(':');
+
+            director = (director + dirInfo[2] + ', ');
+        }
+        $('#spnDirector').html(director.substring(0, director.length - 2));
+
+        $('#frmAddDocument').submit(function (e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+            $.ajax({
+                url: '@Url.Action("AddDocument", "Document")',
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    $('#myAddDocModal').modal('hide');
+                    $('#myDocumentContainer').html(data);
+                    setMoveButton(data);
+                },
+                error: function (data) {
+                    console.log("Error: " + data.responseText);
+                    $('#myAddDocModal').modal('hide');
+                    $('#myDocumentContainer').html(data);
+                }
+            });
+            return false;
+        });
+
+        $('#myFeasibilityFormModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            onDeny: function () {
+                $('#myFeasibilityFormModal').modal('hide');
+                window.location.reload();
+            },
+            onApprove: function (e) {
+                //var validated = $('#frmFeasibilityForm').form('validate form');
+                //if (!validated) {
+                //    return false;
+                //}
+                //else {
+                //    $('#frmFeasibilityForm').submit();
+                //}
+            }
+        });
+
+        $('#myInitiationFormModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            onDeny: function () {
+                $('#myInitiationFormModal').modal('hide');
+                window.location.reload();
+            },
+            onApprove: function (e) {
+                //var validated = $('#frmInitiationForm').form('validate form');
+                //if (!validated) {
+                //    return false;
+                //}
+                //else {
+                //    $('#frmInitiationForm').submit();
+                //}
+            }
+        });
+
+        $('#myImplementationFormModal').modal({
+            closable: false,
+            transition: 'horizontal flip',
+            onDeny: function () {
+                $('#myImplementationFormModal').modal('hide');
+                window.location.reload();
+            },
+            onApprove: function (e) {
+                //var validated = $('#frmImplementationForm').form('validate form');
+                //if (!validated) {
+                //    return false;
+                //}
+                //else {
+                //    $('#frmImplementationForm').submit();
+                //}
+            }
+        });
+
+    });
+
+     function Delete(documentId, ticketNum, requestType) {
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("DeleteDocument", "Document")',
+            data: { documentID: documentId, ticketNum: ticketNum, requestType: requestType },
+            success: function (data) {
+                $('#myDocumentContainer').html(data);
+                hideDimmers();
+                setMoveButton(data);
+            }
+        })
+    }
+    console.log('Request Type: ' + @Model.Requests.RequestType + '   ' + 'Request Status: ' + @Model.Requests.RequestStatus);
+
+    function setMoveButton(data) {
+        if (@Model.Requests.RequestType == 4) {
+            $('#h2Process').html("Feasibility Review");
+            $('#btnMoveRequest').html('Move to Initiation Review >>>');
+            enableMoveButton(data,'Feasibility Review', 0)
+        }
+        else if (@Model.Requests.RequestType == 6) {
+            if (@Model.Requests.RequestStatus == 12) {
+                $('#h2Process').html("Change Request Review");
+                $('#btnMoveRequest').html('Move to Initiation Review >>>');
+                enableMoveButton(data,'Feasibility Review', 1)
+            }
+            else {
+                $('#h2Process').html("Initiation Review");
+                enableMoveButton(data, 'Initiation Review', 0)
+                //Post Initial Build Review - new optional review step
+                if ('@Model.Requests.NeedInitBuildReview' == 'Yes') {
+                    $('#btnMoveRequest').html('Move to Post Initial Build Review >>>');
+                } else {
+                    $('#btnMoveRequest').html('Move to Implementation Review >>>');
+                }
+            }
+        }
+        else if (@Model.Requests.RequestType == 7) {
+            if (@Model.Requests.RequestStatus == 12) {
+                $('#btnMoveRequest').html('Move to Implementation Review >>>');
+                enableMoveButton(data, 'Initiation Review', 1);
+                $('#h2Process').html("Change Request Review");
+            } else {
+                $('#h2Process').html("Implementation Review");
+                $('#btnMoveRequest').html('Move to Production Ready >>>');
+                enableMoveButton(data,'Implementation Review', 0)
+            }
+        }
+        //Post Initial Build review
+        else if (@Model.Requests.RequestType == 8) {
+            if (@Model.Requests.RequestStatus == 12) {
+                $('#btnMoveRequest').html('Move to Post Initial Build Review >>>');
+                enableMoveButton(data, 'Initiation Review', 1);
+                $('#h2Process').html("Change Request Review");
+            } else {
+                $('#h2Process').html("Post Initial Build Review");
+                $('#btnMoveRequest').html('Move to Implementation Review >>>');
+                enableMoveButton(data,'Post Initial Build Review', 0)
+            }
+        }
+    }
+
+    function enableMoveButton(data, type, ADFlag) {
+        var docArray;
+        var docList;
+        var ADReview = "";
+
+        //if (ADFlag == 1) {
+        //    ADReview = "Change Request Review"
+        //}
+
+        var formFlag = '@formFlag'.toLowerCase();
+        console.log(type + " form: " + formFlag);
+
+        if (data != undefined) {
+            var docTable = $('#documents')[0];
+
+            if ((docTable.innerText.indexOf(type) > 0 || formFlag == 'true') && '@Model.Requests.AssignedSA' != '' && (ADReview == '' || (ADReview != '' && docTable.innerText.indexOf(ADReview)))) {
+                if (type == 'Initiation Review') {
+                    if (docTable.innerText.indexOf('Workflow') > 0 && docTable.innerText.indexOf('SOW/Change Request') > 0) {
+                        $('#btnMoveRequest').removeAttr("disabled");
+                    }
+                    else {
+                        $('#btnMoveRequest').attr("disabled", true);
+                    }
+                }
+                else {
+                    $('#btnMoveRequest').removeAttr("disabled");
+                }
+            }
+            else {
+                $('#btnMoveRequest').attr("disabled", true);
+            }
+        }
+        else {
+            docArray = '@Html.Raw(Json.Serialize(Model.Documents))';
+            docList = JSON.parse(docArray);
+
+            var haveReview;
+            var haveReport;
+            var haveAddendum;
+            var haveSOW;
+            var haveWF;
+            var neededAddendum = false;
+            if (@Model.Requests.RequestStatus == 12) { neededAddendum = true;}
+
+            for (i = 0; i < docList.length; i++) {
+                if (docList[i].documentType == type) {
+                    haveReview = true;
+                }
+                if (docList[i].documentType == 'Engagement Cord Report') {
+                    haveReport = true;
+                }
+                if (docList[i].documentType == 'Change Request Review') {
+                    haveAddendum = true;
+                }
+                if (docList[i].documentType == 'SOW/Change Request') {
+                    haveSOW = true;
+                }
+                 if (docList[i].documentType == 'Workflow') {
+                    haveWF = true;
+                }
+            }
+            if (formFlag == 'true') { haveReview = true; }
+
+            if ('@Model.Requests.AssignedSA' != '' && (haveReview == true  || neededAddendum == true )) {
+                if (type == 'Initiation Review') {
+                    if (haveWF == true && haveSOW == true) {
+                        $('#btnMoveRequest').removeAttr("disabled");
+                    }
+                    else {
+                        $('#btnMoveRequest').attr("disabled", true);
+                    }
+                }
+                else {
+                    $('#btnMoveRequest').removeAttr("disabled");
+                }
+                return false;
+            }
+            else {
+                $('#btnMoveRequest').attr("disabled", true);
+            }
+        }
+    }
+
+    function updateInitBuildSlider(sliderText) {
+        $('#resultInitBuildSlider').html(sliderText);
+        if (sliderText == 'Yes') {
+            $('#btnNo3').addClass('basic');
+            $('#btnYes3').removeClass('basic');
+        }
+        else if (sliderText == 'No') {
+            $('#btnYes3').addClass('basic');
+            $('#btnNo3').removeClass('basic');
+        }
+        else {
+            $('#btnYes3').addClass('basic');
+            $('#btnNo3').addClass('basic');
+        }
+        $('#Requests_NeedInitBuildReview').val(sliderText);
+        return false;
+    }
+    function updateStaffSlider(sliderText) {
+        $('#resultSlider').html(sliderText);
+        if (sliderText == 'Yes') {
+            $('#btnNo').addClass('basic');
+            $('#btnYes').removeClass('basic');
+        }
+        else if (sliderText == 'No') {
+            $('#btnYes').addClass('basic');
+            $('#btnNo').removeClass('basic');
+        }
+        else {
+            $('#btnYes').addClass('basic');
+            $('#btnNo').addClass('basic');
+        }
+        $('#Requests_NeedsStaffing').val(sliderText);
+        return false;
+    }
+    function updateSteelSlider(sliderText) {
+        $('#Requests_SteelThreadDetail').hide();
+        $('#lblSteelThreadDetail').hide();
+
+        if (sliderText == 'Yes') {
+            $('#btnNo2').addClass('basic');
+            $('#btnYes2').removeClass('basic');
+
+            $('#Requests_SteelThreadDetail').show();
+            $('#lblSteelThreadDetail').show();
+        }
+        else if (sliderText == 'No') {
+            $('#btnYes2').addClass('basic');
+            $('#btnNo2').removeClass('basic');
+        }
+        else {
+            $('#btnYes2').addClass('basic');
+            $('#btnNo2').addClass('basic');
+        }
+        $('#Requests_SteelThread').val(sliderText);
+        return false;
+    }
+
+    function OpenFeasibilityFormModal(ticketNum) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("FeasibilityForm", "Feasibility")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewFeasibilityForm').html(data);
+                $('#myFeasibilityFormModal').modal('show');
+            }
+        });
+    };
+
+    function CloseFeasibilityFormModal() {
+        $('#myFeasibilityFormModal').modal('hide');
+    };
+
+    function OpenInitiationFormModal(ticketNum) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("InitiationForm", "Feasibility")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewInitiationForm').html(data);
+                $('#myInitiationFormModal').modal('show');
+            }
+        });
+    };
+
+    function CloseInitiationFormModal() {
+        $('#myInitiationFormModal').modal('hide');
+    };
+
+    function OpenImplementationFormModal(ticketNum) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("ImplementationForm", "Feasibility")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewImplementationForm').html(data);
+                $('#myImplementationFormModal').modal('show');
+            }
+        });
+    };
+
+    function CloseImplementationFormModal() {
+        $('#myImplementationFormModal').modal('hide');
+    };
+
+    function OpenInitBuildFormModal(ticketNum) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("InitBuildForm", "Feasibility")',
+            data: { ticketNum: ticketNum },
+            success: function (data) {
+                $('#PreviewInitBuildForm').html(data);
+                $('#myInitBuildFormModal').modal('show');
+            }
+        });
+    };
+
+    function CloseInitBuildFormModal() {
+        $('#myInitBuildFormModal').modal('hide');
+    };
+</script>
+@{
+    var carrierInfo = Model.Carriers.FirstOrDefault(c => c.CarrierId == Model.Requests.CarrierId);
+    var supportedLanguages = carrierInfo.SupportedLanguages;
+    var sellingModel = carrierInfo.SellingModel;
+    var insuranceProducts = carrierInfo.InsuranceProducts;
+    var ipipelineProducts = carrierInfo.iPipelineProducts;
+}
+
+
+<nav id="ProcessHeader" class="navbar navbar-expand-lg navbar-dark primary-color" style="padding:10px 10px 10px 10px">
+    <h2>
+        <span id="h2Process">Feasibility Review</span><span>  # @Model.Requests.TicketNumber</span>
+    </h2>
+</nav>
+
+<div class="se-pre-con"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Loading Review...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+<div class="se-post-con hide" id="postMsg"><div style="text-align:center; vertical-align:middle"><br /><br /><br /><br /><h1>Updating Review...</h1><br /><img src="~/img/indicators/loading.gif" /></div></div>
+
+
+<div class="ui cards" style="padding:0px 10px 0px 10px">
+    <div id="feasabilityEditContainer" class="ui one card fluid" style="box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; border:none !important; padding:15px 15px 15px 15px">
+        <div class="ui fluid accordion">
+            <div class="title">
+                <table border="0" width="100%">
+                    <tr>
+                        <td width="50%"><font class="subHeader">Customer Overview Information</font></td>
+                        <td></td>
+                        <td width="50%"><font class="subHeader">Project Overview Information</font></td>
+                        <td><i class="dropdown icon"></i></td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="content">
+                <table border="0" width="100%">
+                    <tr>
+                        <td width="50%">
+                            <div style="padding-bottom:5px !important">
+                                @Model.Requests.ProjectName
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Carrier: </b>@Model.Requests.CarrierName
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Requested on: </b>@Model.Requests.RequestDate
+                            </div>
+                            @{ if (Model.Requests.FeasProdDate != null)
+                                {
+                                    <div style="padding-bottom:5px !important">
+                                        <b>Expected PROD Date: </b>@Model.Requests.FeasProdDate.Value.ToShortDateString()
+                                    </div>
+                                }
+                            }
+                            <div style="padding-bottom:5px !important">
+                                <b>Supported Languages: </b>@supportedLanguages
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Selling Model: </b>@sellingModel
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Insurance Products: </b>@insuranceProducts
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>iPipeline Products: </b>@ipipelineProducts
+                            </div>
+                        </td>
+                        <td></td>
+                        <td width="50%">
+                            <div style="padding-bottom:5px !important">
+                                <b>SOW, CR or Opportunity Name or Number: </b>@Model.Requests.OpportunityNameNumber
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Projector Code: </b>@Model.Requests.ProjectorCode
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Technology: </b>@Model.Requests.Technology
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>New eSignature Implementation: </b>@Model.Requests.eSig
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Needs Splunk Training: </b>@Model.Requests.Splunk
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Requestor: </b>@Model.Requests.RequestorName
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Team Members: </b><span id="spnTeamMembers"></span>
+                            </div>
+                            <div style="padding-bottom:5px !important">
+                                <b>Director: </b><span id="spnDirector"></span>
+                            </div>
+                        </td>
+                        <td></td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="title">
+                <i class="dropdown icon"></i>
+                <font class="subHeader" style="width:98% !important">Description Information</font>
+            </div>
+            <div class="content">
+                <div class="field" style="margin-top:10px !important">
+                    <div class="fifteen wide field">
+                        <div style="margin-top:10px !important">
+                            <b>Business Objective/Requirements</b>
+                            <br />
+                            @Model.Requests.Requirements
+                        </div>
+                    </div>
+                    <div class="fifteen wide field">
+                        <div style="margin-top:10px !important">
+                            <b>Special Challenges</b>
+                            <br />
+                            @Model.Requests.SpecialChallenge
+                        </div>
+                    </div>
+                    @{ if (Model.Requests.RequestDesc != null)
+                       {
+                            <div class="fifteen wide field">
+                                <div style="margin-top:10px !important">
+                                    <b>Additional Request Description</b>
+                                    <br />
+                                    @Model.Requests.RequestDesc
+                                </div>
+                            </div>
+                    } }
+                    <div class="fifteen wide field">
+                        <div style="margin-top:10px !important">
+                            <h4>Project Detail</h4>
+                            <br />
+                            @Html.Raw(Model.Requests.ProjectType)
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="field" style="padding-top:15px">
+            <div class="sixteen wide field">
+                @{
+                    var viewType = Context.Session.GetString("ViewType");
+                    if (viewType == "EC")
+                    {
+                        <font class="subHeader" style="width:98% !important">EC Information</font>
+                    }
+                    else
+                    {
+                        <font class="subHeader" style="width:98% !important">SA Information</font>
+                    }
+                }
+            </div>
+        </div>
+        <form asp-action="EditFeasibilityReview" asp-controller="Feasibility" method="POST" data-ajax="true" data-ajax-update="frmEditFeasibilityReview" id="frmEditFeasibilityReview" class="ui small form">
+            <div class="two fields" style="margin-top:10px !important">
+                <div class="eight wide field">
+
+                    @Html.HiddenFor(model => model.Requests.RequestId)
+                    @Html.HiddenFor(model => model.Requests.RequestDate)
+                    @Html.HiddenFor(model => model.Requests.TicketNumber)
+                    @Html.HiddenFor(model => model.Requests.Requestor)
+                    @Html.HiddenFor(model => model.Requests.RequestorName)
+                    @Html.HiddenFor(model => model.Requests.RequestorEmail)
+                    @Html.HiddenFor(model => model.Requests.ProgressType)
+                    @Html.HiddenFor(model => model.Requests.RequestReviewDate)
+                    @Html.HiddenFor(model => model.Requests.RequestDesc)
+                    @Html.HiddenFor(model => model.Requests.SpecialChallenge)
+                    @Html.HiddenFor(model => model.Requests.ProjectType)
+                    @Html.HiddenFor(model => model.Requests.FeasibilityReviewDate)
+                    @Html.HiddenFor(model => model.Requests.InitiationReviewDate)
+                    @Html.HiddenFor(model => model.Requests.InitBuildReviewDate)
+                    @Html.HiddenFor(model => model.Requests.ImplementationReviewDate)
+                    @Html.HiddenFor(model => model.Requests.FeasProdDate)
+
+                    <input type="hidden" id="submitType" name="submitType" />
+                    <label for="Requests_AssignedSA">Assigned SA</label>
+                    <div class="ui labeled input" style="width:92%">
+                        <label for="Requests_StatusType" class="ui ltgray label"><i class="icon user md"></i></label>
+                        <div class="ui fluid selection dropdown" id="SADropDown" style="width:50%">
+                            <input type="hidden" name="@Html.NameFor(x => x.Requests.AssignedSA)" id="@Html.IdFor(x => x.Requests.AssignedSA)">
+                            <i class="dropdown icon"></i>
+                            <div class="default text">--Assign to SA--</div>
+                            <div class="menu">
+                                <div class="item" data-value="mcain">
+                                    <img class="ui mini avatar image" src="/img/PersonPlaceholder_sm.png">
+                                    Matt Cain
+                                </div>
+                                <div class="item" data-value="jgirard">
+                                    <img class="ui mini avatar image" src="/img/PersonPlaceholder_sm.png">
+                                    Jim Girard
+                                </div>
+                                <div class="item" data-value="dolsen">
+                                    <img class="ui mini avatar image" src="/img/PersonPlaceholder_sm.png">
+                                    Darnae Olsen
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @Html.HiddenFor(model => model.Requests.AssignedSAEmail)
+                    @Html.HiddenFor(model => model.Requests.AssignedSAName)
+                    <br /><br />
+                    @{
+                        if (Model.Requests.RequestType == 4)
+                        {
+                            <label for="Requests_RequestType">Request Type</label>
+                            <div class="ui labeled input" style="width:50% !important">
+                                <label for="Requests_RequestType" class="ui ltgray label"><i class="icon sitemap"></i></label>
+                                @Html.DropDownListFor(model => model.Requests.RequestType, new SelectList(Model.RequestTypes, "RequestType", "RequestName"), "--Choose Request Type--", new { @class = "ui fluid selection dropdown", autocomplete = "off", required = "required" })
+                            </div>
+                        }
+                        else
+                        {
+                            @Html.HiddenFor(model => model.Requests.RequestType)
+                        }
+                    }
+                    <br /><br />
+
+                    @{
+                        if (Model.Requests.RequestStatus > 1 && viewType == "Admin")
+                        {
+                            <label>Request Status</label>
+                            <div class="ui labeled input" style="width:50% !important">
+                                <label for="Requests_StatusType" class="ui label"><i class="icon industry"></i></label>
+                                @Html.DropDownListFor(model => model.Requests.RequestStatus, new SelectList(Model.Status, "ID", "Text"), "--Choose Status--", new { @class = "ui fluid selection dropdown", autocomplete = "off" })
+                            </div>
+                            <div class="ui ignored info attached message" style="width:450px">
+                                <b>Please add a comment with more information if the Status changes.</b>
+                            </div>
+                            <br />
+                        }
+                        else
+                        {
+                            @Html.HiddenFor(model => model.Requests.RequestStatus)
+                        }
+
+                        <label>Needs Post Initial Build Review?</label>
+                        <div class="ui buttons">
+                            <button type="button" class="ui button basic blue deny" id="btnYes3" onclick="updateInitBuildSlider('Yes');">Yes</button>
+                            <div class="or" onclick="updateInitBuildSlider('');"></div>
+                            <button type="button" class="ui button basic gray deny" id="btnNo3" onclick="updateInitBuildSlider('No');">No</button>
+                        </div>
+                        <div id="resultInitBuildSlider" class="hide"></div>
+                        @Html.HiddenFor(model => model.Requests.NeedInitBuildReview)
+                        <br /><br />
+
+                        <label>Needs Staffing?</label>
+                        <div class="ui buttons">
+                            <button type="button" class="ui button basic blue deny" id="btnYes" onclick="updateStaffSlider('Yes');">Yes</button>
+                            <div class="or" onclick="updateStaffSlider('');"></div>
+                            <button type="button" class="ui button basic gray deny" id="btnNo" onclick="updateStaffSlider('No');">No</button>
+                        </div>
+                        <div id="resultSlider" class="hide"></div>
+                        @Html.HiddenFor(model => model.Requests.NeedsStaffing)
+                        <br /><br />
+                        @Html.HiddenFor(model => model.Requests.SteelThread)
+
+                        <label>Steel Thread?</label>
+                        <div class="ui buttons">
+                            <button type="button" class="ui button basic blue deny" id="btnYes2" onclick="updateSteelSlider('Yes');">Yes</button>
+                            <div class="or" onclick="updateSteelSlider('');"></div>
+                            <button type="button" class="ui button basic gray deny" id="btnNo2" onclick="updateSteelSlider('No');">No</button>
+                        </div>
+                        <label for="Requests_SteelThreadDetail" id="lblSteelThreadDetail">Details:</label>
+                        <textarea id="@Html.IdFor(model => model.Requests.SteelThreadDetail)" name="@Html.NameFor(model => model.Requests.SteelThreadDetail)" rows="2" style="max-width:400px !important" autocomplete="off">@Html.Raw(Model.Requests.SteelThreadDetail)</textarea>
+
+                        if (viewType == "EC")
+                        {
+                            StatusModel status = Model.Status.Where(x => x.ID.Equals(Model.Requests.RequestStatus)).FirstOrDefault();
+                            var assignedSA = Model.Requests.AssignedSAName;
+                            if (assignedSA != "")
+                            {
+                                <br /><br />
+                                <label><b>Status: </b>@status.Text</label>
+                            }
+                        }
+                    }
+                </div>
+                <div class="eight wide field">
+                    @Html.HiddenFor(model => model.Requests.Requirements)
+                    @Html.HiddenFor(model => model.Requests.ProjectName)
+                    @Html.HiddenFor(model => model.Requests.CarrierId)
+                    @Html.HiddenFor(model => model.Requests.CarrierName)
+
+                    <label>Architecture Notes</label>
+                    <div class="ui labeled input" style="max-width:80%">
+                        <label for="Requests_SANotes" class="ui ltgray label"><i class="icon copy md"></i></label>
+                        <textarea id="@Html.IdFor(model => model.Requests.SANotes)" name="@Html.NameFor(model => model.Requests.SANotes)" cols="2" rows="5" autocomplete="off"></textarea>
+                    </div>
+
+                    <br /><br />
+                    <label id="lblComment"><u>Comments</u></label>
+                    <table width="100%" border="0">
+                        @{
+                            foreach (var comment in Model.History)
+                            {
+                                <tr>
+                                    <td class="info-text"><b><font color="blue">@comment.AddedBy</font></b>: @Html.Raw(comment.History) - <span style="font-size:xx-small !important">@comment.AddDateTime</span></td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                    <hr />
+                    <div class="ui labeled input" style="max-width:80%">
+                        <label for="newComment" class="ui ltgray label"><i class="icon comment alternate"></i></label>
+                        <textarea id="newComment" name="newComment" placeholder="Add Comment" spellcheck="true" cols="2" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <input type="submit" id="btnTrueSubmit" style="visibility:hidden" />
+        </form>
+        <div class="field" style="margin-top:10px !important">
+            <div class="sixteen wide field">
+                <hr />
+                <input type="button" class="ui blue basic button" id="btnFeasibilityForm" value="Feasibility Review Form" onclick="OpenFeasibilityFormModal('@Model.Requests.TicketNumber');" />
+                @{
+                    if (Model.Requests.RequestType >= 6)
+                    {
+                        <input type="button" class="ui blue basic button" id="btnInitiationForm" value="Initiation Review Form" onclick="OpenInitiationFormModal('@Model.Requests.TicketNumber');" />
+                    }
+                    if (Model.Requests.NeedInitBuildReview == "Yes" && Model.Requests.RequestType >= 7)
+                    {
+                        <input type="button" class="ui blue basic button" id="btnInitBuildForm" value="Post Initial Build Review Form" onclick="OpenInitBuildFormModal('@Model.Requests.TicketNumber');" />
+                    }
+                    if (Model.Requests.RequestType == 7)
+                    {
+                        <input type="button" class="ui blue basic button" id="btnImplementationForm" value="Implementation Review Form" onclick="OpenImplementationFormModal('@Model.Requests.TicketNumber');" />
+                    }
+                }
+                <br /><br />
+                <label><u>Templates</u></label><br />
+                <ul>
+                    @{
+                        if (viewType == "Admin")
+                        {
+                            <li>
+                                <a href="https://ipipeline.sharepoint.com/sites/ProfessionalServices/professionalservicesus/Technology/Shared%20Documents/Solution%20Architecture/Feasibility%20Review.docx?d=w2ef0611ca3be4dbf87c35a4335f9e766" target="_blank">SA Feasibility Review</a>
+                            </li>
+                            <li>
+                                <a href="https://ipipeline.sharepoint.com/sites/ProfessionalServices/professionalservicesus/Technology/Shared%20Documents/Solution%20Architecture/Initiation%20Review.docx?d=wfd1bbb46c47b44b5a0c328c5a8e50e15" target="_blank">SA Initiation Review</a>
+                            </li>
+                            <li>
+                                <a href="https://ipipeline.sharepoint.com/sites/ProfessionalServices/professionalservicesus/Technology/Shared%20Documents/Solution%20Architecture/Implementation%20Review.docx?d=wff7337440c22437eac4782631a810c9b" target="_blank">SA Implementation Review</a>
+                            </li>
+                        }
+                    }
+                    <li>
+                        <a href="https://ipipeline.sharepoint.com/sites/ProfessionalServices/professionalservicesus/Technology/Shared%20Documents/Solution%20Architecture/Templates/EC%20Report.docx?d=wbb0483a9bcaa447e93ac54dbc8aa56fd" target="_blank">EC Report</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="sixteen wide field" id="myDocumentContainer">
+            @{
+                DocumentDisplayModel documentModel = new DocumentDisplayModel();
+                documentModel.Documents = Model.Documents;
+                documentModel.TicketNumber = Model.Requests.TicketNumber;
+                documentModel.RequestType = Model.Requests.RequestType;
+                await Html.RenderPartialAsync("/Views/Partial/Documents.cshtml", documentModel);
+            }
+        </div>
+        <div class="field" style="margin-top:10px !important">
+            <div class="sixteen wide field">
+                <hr /><br />
+                <button type="button" id="btnUpdateRequest" value="UpdateRequest" class="ui basic button approved positive">Update Request</button>
+                <button type="button" value="Cancel" class="ui basic button close" onclick="top.location.href='/'" style="width:138px">Close</button>
+                @{
+                    if (viewType == "Admin")
+                    {
+                        <button type="submit" id="btnMoveRequest" value="MoveRequest" class="ui basic button blue" style="float:right">Move to Initiation Review >>></button>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ui small modal" id="myDeleteModal" aria-labelledby="myDeleteModal" aria-hidden="true">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Delete Document</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <p style="margin:10px 10px 20px 10px"><label id="lblMessage" style="color:red;"></label></p>
+    </div>
+    <div class="actions">
+        <button type="button" class="ui basic button close" onclick="CloseDeleteModal()">Cancel</button>
+        <button type="button" class="ui basic button deny negative">Delete Document!</button>
+    </div>
+</div>
+
+<div class="ui small modal" id="myAddDocModal" aria-labelledby="myAddDocModal" aria-hidden="true">
+    <div class="header inverted" style="background-color:black">
+        <h3 id="modalTitle" style="color:white">Add Document</h3>
+    </div>
+    <div class="content">
+        <form asp-action="AddDocument" asp-controller="Document" method="POST" class="ui small form" id="frmAddDocument">
+            <div class="modal-body" id="PreviewAddDoc">
+                PartialView
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <button type="button" class="ui basic button close" onclick="CloseAddModal()">Cancel</button>
+        <button type="button" class="ui basic button approved positive">Add Document!</button>
+    </div>
+</div>
+
+<div class="ui small modal" id="myFeasibilityFormModal" aria-labelledby="myFeasibilityFormModal" aria-hidden="true" style="z-index:2000; width:1000px">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Feasibility Review</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"><i onclick="CloseFeasibilityFormModal();" class="close small icon" style="color:white !important"></i></div>
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="FeasibilityForm" asp-controller="Feasibility" method="POST" class="ui small form" id="frmFeasibilityForm">
+            <div class="modal-body" id="PreviewFeasibilityForm">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                @{
+                    if (viewType == "Admin")
+                    {
+                        <button type="submit" id="FeasFormSubmitButton" class="ui positive basic button approved">Submit Review</button>
+                    }
+                    else
+                    {
+                        <button type="button" id="FeasFormButton" class="ui basic button close" onclick="CloseFeasibilityFormModal();">Close</button>
+                    }
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ui small modal" id="myInitiationFormModal" aria-labelledby="myInitiationFormModal" aria-hidden="true" style="z-index:2000; width:1000px">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Initiation Review</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"><i onclick="CloseInitiationFormModal();" class="close small icon" style="color:white !important"></i></div>
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="InitiationForm" asp-controller="Feasibility" method="POST" class="ui small form" id="frmInitiationForm">
+            <div class="modal-body" id="PreviewInitiationForm">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                @{
+                    if (viewType == "Admin")
+                    {
+                        <button type="submit" id="InitFormSubmitButton" class="ui positive basic button approved">Submit Review</button>
+                    }
+                    else
+                    {
+                        <button type="button" id="InitFormButton" class="ui basic button close" onclick="CloseInitiationFormModal();">Close</button>
+                    }
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ui small modal" id="myInitBuildFormModal" aria-labelledby="myInitBuildFormModal" aria-hidden="true" style="z-index:2000; width:1000px">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Post Initial Build Review</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"><i onclick="CloseInitBuildFormModal();" class="close small icon" style="color:white !important"></i></div>
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="InitBuildForm" asp-controller="Feasibility" method="POST" class="ui small form" id="frmInitBuildForm">
+            <div class="modal-body" id="PreviewInitBuildForm">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                @{
+                    if (viewType == "Admin")
+                    {
+                        <button type="submit" id="InitBuildFormSubmitButton" class="ui positive basic button approved">Submit Review</button>
+                    }
+                    else
+                    {
+                        <button type="button" id="InitBuildFormButton" class="ui basic button close" onclick="CloseInitBuildFormModal();">Close</button>
+                    }
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ui small modal" id="myImplementationFormModal" aria-labelledby="myImplementationFormModal" aria-hidden="true" style="z-index:2000; width:1000px">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalTitle" style="color:white">Implementation Review</h3></div>
+            <div class="ui one wide column right aligned" style="cursor:pointer"><i onclick="CloseImplementationFormModal();" class="close small icon" style="color:white !important"></i></div>
+        </div>
+    </div>
+    <div class="content">
+        <form asp-action="ImplementationForm" asp-controller="Feasibility" method="POST" class="ui small form" id="frmImplementationForm">
+            <div class="modal-body" id="PreviewImplementationForm">
+                @*PartialView*@
+            </div>
+            <div class="actions" style="padding:10px 0px 0px 0px">
+                @{
+                    if (viewType == "Admin")
+                    {
+                        <button type="submit" id="ImplFormSubmitButton" class="ui positive basic button approved">Submit Review</button>
+                    }
+                    else
+                    {
+                        <button type="button" id="ImplFormButton" class="ui basic button close" onclick="CloseImplementationFormModal();">Close</button>
+                    }
+                }
+            </div>
+        </form>
+    </div>
+</div>

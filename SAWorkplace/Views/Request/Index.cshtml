@@ -1,0 +1,249 @@
+﻿@using Microsoft.AspNetCore.Http;
+@using System.Security.Claims;
+<script>
+    $(function () {
+        $(".filters").click(function () {
+            var filterType = $(this).attr("id");
+            var formData = new FormData();
+            formData.append("filterType", filterType);
+            var action = '@(Url.Action("Requests", "Request"))';
+
+            $.ajax({
+                url: action,
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'text',
+                error: function (data) {
+
+                },
+                success: function (data) {
+                    $("#requestContainer").html(data);
+
+                    var href = top.location.href;
+                    if (href.indexOf("?filter") !== -1) {
+                        top.location.href = '/';
+                    }
+                }
+            });
+        });
+    });
+
+    $(function () {
+        $(".sort").click(function () {
+            var sortType = $(this).attr("id");
+            var formData = new FormData();
+            formData.append("filterType", "");
+            formData.append("sortType", sortType);
+            var action = '@(Url.Action("Requests", "Request"))';
+
+            $.ajax({
+                url: action,
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'text',
+                error: function (data) {
+
+                    },
+                success: function (data) {
+                    $("#requestContainer").html(data);
+                        var heading = filterType + ' Requests'
+                    $("#h2Request").html(heading);
+                    }
+                });
+        });
+    });
+
+    $(document).ready(function () {
+        $('.ui.dropdown').dropdown({ "clearable": true });
+
+        $('#allocationTop').removeClass('active');
+        $('#requestTop').addClass('active');
+
+        $("#frmSearch").submit(function () {
+            var searchText = $('#txtSearch').val();
+            var searchType = $('#searchType').val();
+            var formData = new FormData();
+            formData.append("searchText", searchText);
+            formData.append("searchType", searchType);
+            var action = '@(Url.Action("SearchRequests", "Request"))';
+
+            $.ajax({
+                url: action,
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'text',
+                error: function (data) {
+
+                },
+                success: function (data) {
+                    $("#requestContainer").html(data);
+                    var heading = 'Your Request'
+                    $("#h2Request").html(heading);
+                    $('#txtSearch').val('');
+                    if (searchType == 2) {
+                        var href = top.location.href;
+                        if (href.indexOf("?filter") !== -1) {
+                            top.location.href = '/';
+                        }
+                    }
+                }
+            });
+            event.preventDefault();
+        });
+    });
+
+    function OpenFeasibility() {
+        location.href='@(Url.Action("AddFeasibilityReview", "Feasibility"))';
+    }
+</script>
+
+
+<div id="requestHeader" class="ui container-fluid" style="padding:17px 5px 5px 5px">
+    <div class="ui grid">
+        <div class="ui three wide column">
+            <div class="ui labeled dropdown primary button icon">
+                <i class="tags icon"></i>
+                <span class="text">Create New Request</span>
+                <div class="menu">
+                    <div class="header">
+                        <i class="tags icon"></i>
+                        Choose Request Type
+                    </div>
+                    <div class="item" onclick="OpenFeasibility()"><a class="item" href="#">Feasability Review</a></div>
+                    <div class="item" onclick="OpenAddModal(0);"><a class="item" href="#">Other Requests</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="ui two wide column">
+            <h1 id="h2Request">Requests</h1>
+        </div>
+
+        @{
+            string viewType = Context.Session.GetString("ViewType");
+
+            if (viewType != "User")
+            {
+                <div class="ui three wide column right bottom aligned">
+                    <div class="ui dropdown">
+
+                        @{string filterType = Context.Session.GetString("FilterType");
+
+                            if (string.IsNullOrEmpty(filterType))
+                            {
+                                filterType = "Filter";
+                            }
+                            else if (filterType == "Open")
+                            {
+                                filterType = "All Open Requests";
+                            }
+                            else if (filterType == "FeasOpen")
+                            {
+                                filterType = "Open Feasibility Reviews";
+                            }
+                            else if (filterType == "FeasAll")
+                            {
+                                filterType = "All Feasibility Reviews";
+                            }
+                            else
+                            {
+                                filterType += " Requests";
+                            }
+
+                            string title = filterType;
+
+                            string carriername = Context.Session.GetString("CarrierName");
+                            string chartFilter = Context.Session.GetString("ChartFilter");
+
+                            if (chartFilter.StartsWith("carrier"))
+                            {
+                                title = filterType + " for " + carriername;
+                            }
+
+                            <div class="text">@title</div>
+                        }
+                        <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <a class="item filters" id="Open">All Open Requests</a>
+                            <a class="item filters" id="All">All Requests</a>
+
+                            @{
+                                string PSArchitect = Context.Session.GetString("PSArchitect");
+
+                                if (PSArchitect == "True" || viewType == "SME")
+                                {
+                                    <a class="item filters" id="My Open">My Open Requests</a>
+                                    <a class="item filters" id="My Pending">My Pending Requests</a>
+                                    <a class="item filters" id="My Closed">My Closed Requests</a>
+                                }
+                                if (viewType == "SME")
+                                {
+                                    <a class="item filters" id="My Areas">My Area Requests</a>
+                                }
+                                if (viewType == "Admin" || viewType == "EC")
+                                {
+                                    <a class="item filters" id="Open SME">Open SME Requests</a>
+                                    <a class="item filters" id="All SME">All SME Requests</a>
+                                    <a class="item filters" id="Steel Thread">Steel Thread Requests</a>
+                                }
+                                if (viewType == "EC")
+                                {
+                                    <a class="item filters" id="Staffing">Staffing Requests</a>
+                                }
+                                if (viewType != "Director")
+                                {
+                                    <a class="item filters" id="Unassigned">Unassigned Requests</a>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="ui three wide column bottom aligned">
+                <div class="ui dropdown">
+                    <div class="text">Sort</div> <i class="dropdown icon"></i>
+                    <div class="menu">
+                        <a class="item sort" id="SORT:CarrierName">Order By Carrier</a>
+                        <a class="item sort" id="SORT:RequestReviewDate">Order By Due Date</a>
+                        <a class="item sort" id="SORT:RequestDate_new">Order By Requested Date (newest first)</a>
+                        <a class="item sort" id="SORT:RequestDate">Order By Requested Date (oldest first)</a>
+                        <a class="item sort" id="SORT:RequestType">Order By Requested Type</a>
+                    </div>
+                </div>
+            </div>
+
+            if (viewType != "User")
+            {
+                <div class="ui five wide column right aligned">
+                    <form class="form-inline text-right ui" style="padding:0px 0px 0px 0px;" id="frmSearch">
+                        <div class="ui input">
+                            <input type="search" placeholder="Ticket # or Project Name" aria-label="Search" id="txtSearch" autocomplete="off" style="width:250px">
+                        </div>
+                        <button class="ui green basic button" onclick="$('#searchType').val(1)" type="submit" style="height:36px !important"><i class="icon search"></i> Search</button>&nbsp;
+                        <button class="ui red basic button" onclick="$('#searchType').val(2)" type="submit" style="height:36px !important"><i class="icon sync"></i> Reset</button>
+                        <input type="hidden" name="searchType" id="searchType" />
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="ui eight wide column right aligned">
+                    <form class="form-inline text-right ui" style="padding:0px 0px 0px 0px;" id="frmSearch">
+                        <div class="ui input">
+                            <input type="search" placeholder="Ticket # or Project Name" aria-label="Search" id="txtSearch" autocomplete="off" style="width:250px">
+                        </div>
+                        <button class="ui green basic button" onclick="$('#searchType').val(1)" type="submit" style="height:36px !important"><i class="icon search"></i> Search</button>&nbsp;
+                        <button class="ui red basic button" onclick="$('#searchType').val(2)" type="submit" style="height:36px !important"><i class="icon sync"></i> Reset</button>
+                        <input type="hidden" name="searchType" id="searchType" />
+                    </form>
+                </div>
+            }
+        }
+    </div>
+</div>
+@{ await Html.RenderPartialAsync("/Views/Partial/Requests.cshtml");}

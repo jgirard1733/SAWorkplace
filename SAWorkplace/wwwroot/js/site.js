@@ -1,4 +1,18 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿
+function addNotificaton() {
+    document.getElementById('favicon').href = '/img/favicon-alert.png';
+}
+function removeNotificaton() {
+    document.getElementById('favicon').href = '/img/favicon-16x16.png';
+}
 
-// Write your JavaScript code.
+(async function () {
+    var connection = new signalR.HubConnectionBuilder()
+        .withUrl('/signalServer')
+        .build();
+
+    connection.on('Review_Added', function (message) {
+        addNotificaton();
+    });
+    await connection.start();
+})();

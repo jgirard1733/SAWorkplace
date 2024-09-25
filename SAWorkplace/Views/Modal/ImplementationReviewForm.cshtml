@@ -1,0 +1,217 @@
+﻿@model SAWorkplace.Models.FeasibilityReviewModel
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Http;
+
+<script>
+    $(document).ready(function () {
+        var dateToday = new Date();
+        dateToday.setDate(dateToday.getDate());
+        $('#dcImplReviewDate').datetimepicker(
+            {
+                format: 'm/d/Y',
+                step: 60,
+                timepicker: false,
+                minDate: dateToday,
+                beforeShowDay: function (date) { return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5, ""] },
+                value: dateToday
+            }
+        );
+
+        if ('@Model.Impl_Topology' != "No") {
+            $('#Impl_TopologyDetail').hide();
+            $('#lblImpl_TopologyDetail').hide();
+        }
+
+        var viewType = '@Context.Session.GetString("ViewType")';
+        console.log("viewType =" + viewType)
+
+        if (viewType != "Admin") {
+            $("#frmImplementationForm :input").prop("disabled", true);
+            $("#ImplFormClose").prop("disabled", false);
+            $("#ImplFormButton").prop("disabled", false);
+        }
+
+    });
+
+    $('#frmImplementationForm').submit(function (e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+
+        $.ajax({
+            url: '@Url.Action("ImplementationForm", "Feasibility")',
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (result) {
+                    if (result.success == true) {
+                        scrollTo(0, 0);
+                        setTimeout(top.location.href = '/Feasibility/EditFeasibility?ticketNum=' + result.ticketNum, 1000);
+                        //setTimeout(top.location.href = '/', 500);
+                    }
+                },
+            error: function (result) {
+                    console.log(result.responseText);
+                }
+            });
+            return false;
+        });
+
+</script>
+
+@Html.HiddenFor(model => model.ID)
+@Html.HiddenFor(model => model.TicketNumber)
+@Html.HiddenFor(model => model.ProjectName)
+@Html.HiddenFor(model => model.TeamMembers)
+
+<div class="two fields">
+    <div class="eight wide field">
+        <label for="Impl_ReviewDate">Review Date(s)</label>
+        <div class="ui labeled input">
+            <label for="Init_ReviewDate" class="ui ltgray label"><i class="icon calendar alternate"></i></label>
+            @Html.EditorFor(model => model.Impl_ReviewDate, new { htmlAttributes = new { @class = "form-control", required = "required", autocomplete = "off" } })
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Impl_ReviewedBy">Reviewed By</label>
+        <div class="ui labeled input">
+            <label for="Init_ReviewedBy" class="ui ltgray label"><i class="icon user md"></i></label>
+            @Html.EditorFor(model => model.Impl_ReviewedBy, new { htmlAttributes = new { @class = "form-control", required = "required", autocomplete = "off" } })
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Was a completed Solution Topology provided?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Impl_Topology, "Yes", new { id = "rbYes1", @onclick = "$('#Impl_TopologyDetail').hide();$('#lblImpl_TopologyDetail').hide();" })
+                @Html.Label("rbYes1", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Impl_Topology, "No", new { id = "rbNo1", @onclick = "$('#Impl_TopologyDetail').show();$('#lblImpl_TopologyDetail').show();" })
+                @Html.Label("rbNo1", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Impl_TopologyDetail" id="lblImpl_TopologyDetail" class="col-form-label-sm">If NO, explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Impl_TopologyDetail)" name="@Html.NameFor(model => model.Impl_TopologyDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Impl_TopologyDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+@*<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Was the Compliance Checklist completed?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Impl_Compliance, "Yes", new { id = "rbYes2" })
+                @Html.Label("rbYes2", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Impl_Compliance, "No", new { id = "rbNo2" })
+                @Html.Label("rbNo2", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Impl_ComplianceDetail" id="lblImpl_ComplianceDetail" class="col-form-label-sm">Provide details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Impl_ComplianceDetail)" name="@Html.NameFor(model => model.Impl_ComplianceDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Impl_ComplianceDetail)</textarea>
+        </div>
+    </div>
+</div>*@
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Are all gaps found during initial review resolved or planned for?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Impl_Gaps, "Yes", new { id = "rbYes3" })
+                @Html.Label("rbYes3", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Impl_Gaps, "No", new { id = "rbNo3" })
+                @Html.Label("rbNo3", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Impl_GapsDetail" id="lblImpl_GapsDetail" class="col-form-label-sm">Explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Impl_GapsDetail)" name="@Html.NameFor(model => model.Impl_GapsDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Impl_GapsDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Were integrations reviewed for security, methods, technologies, etc.?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Impl_IntegrationReq, "Yes", new { id = "rbYes4" })
+                @Html.Label("rbYes4", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Impl_IntegrationReq, "No", new { id = "rbNo4" })
+                @Html.Label("rbNo4", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Impl_IntegrationReqDetail" id="lblImpl_IntegrationReqDetail" class="col-form-label-sm">Explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Impl_IntegrationReqDetail)" name="@Html.NameFor(model => model.Impl_IntegrationReqDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Impl_IntegrationReqDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <div>
+            <label class="col-form-label-sm">Was a UX reviewed for design and flow?</label>
+            <div class="input-group input-group-sm mb-2">
+                @Html.RadioButtonFor(model => model.Impl_UX, "Yes", new { id = "rbYes5" })
+                @Html.Label("rbYes5", "Yes", new { @class = "col-form-label-sm" })
+                @Html.RadioButtonFor(model => model.Impl_UX, "No", new { id = "rbNo5" })
+                @Html.Label("rbNo5", "No", new { @class = "col-form-label-sm" })
+            </div>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Impl_UXDetail" id="lblImpl_UXDetail" class="col-form-label-sm">Explain details.</label>
+        <div class="input-group input-group-sm mb-1">
+            <textarea id="@Html.IdFor(model => model.Impl_UXDetail)" name="@Html.NameFor(model => model.Impl_UXDetail)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Impl_UXDetail)</textarea>
+        </div>
+    </div>
+</div>
+
+<div class="two fields">
+    <div class="eight wide field">
+        <label for="Impl_AdditionalCosts" class="col-form-label-sm">Expected Additional Costs</label>
+        <div class="ui labeled input">
+            <label for="Impl_AdditionalCosts" class="ui ltgray label"><i class="icon money"></i></label>
+            <textarea id="@Html.IdFor(model => model.Impl_AdditionalCosts)" name="@Html.NameFor(model => model.Impl_AdditionalCosts)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Impl_AdditionalCosts)</textarea>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Impl_ItemsNeeded" class="col-form-label-sm">Items Needed for Implementation Review</label>
+        <div class="ui labeled input">
+            <label for="Impl_ItemsNeeded" class="ui ltgray label"><i class="icon list"></i></label>
+            <textarea id="@Html.IdFor(model => model.Impl_ItemsNeeded)" name="@Html.NameFor(model => model.Impl_ItemsNeeded)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Impl_ItemsNeeded)</textarea>
+        </div>
+    </div>
+</div>
+<div class="two fields">
+    <div class="eight wide field">
+        <label for="Impl_JIRAs" class="col-form-label-sm">JIRAs</label>
+        <div class="ui labeled input">
+            <label for="Impl_JIRAs" class="ui ltgray label"><i class="icon industry md"></i></label>
+            <textarea id="@Html.IdFor(model => model.Impl_JIRAs)" name="@Html.NameFor(model => model.Impl_JIRAs)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Impl_JIRAs)</textarea>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label for="Impl_Notes" class="col-form-label-sm">Notes</label>
+        <div class="ui labeled input">
+            <label for="Impl_Notes" class="ui ltgray label"><i class="icon copy md"></i></label>
+            <textarea id="@Html.IdFor(model => model.Impl_Notes)" name="@Html.NameFor(model => model.Impl_Notes)" class="form-control" rows="2" autocomplete="off">@Html.Raw(Model.Impl_Notes)</textarea>
+        </div>
+    </div>
+</div>

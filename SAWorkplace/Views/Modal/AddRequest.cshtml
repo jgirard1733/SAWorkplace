@@ -1,8 +1,192 @@
-﻿@model SAWorkplace.Models.RequestEditModel
+﻿@using Microsoft.AspNetCore.Http;
+@model SAWorkplace.Models.RequestEditModel
 @using System.Text.RegularExpressions
+<style>
+    .ui.action.input input[type="file"] {
+        display: none;
+    }
 
+    .ui.search.dropdown > input.search {
+        min-width: 450px;
+    }
+</style>
+<link rel="stylesheet" href="~/css/jquery.datetimepicker.css" />
+<link rel="stylesheet" href="~/css/trumbowyg.colors.css" />
+<link rel="stylesheet" href="~/css/trumbowyg.min.css" />
+
+<script src="~/js/trumbowyg.min.js"></script>
+<script src="~/js/trumbowyg.colors.min.js"></script>
+<script src="~/js/trumbowyg.cleanpaste.min.js"></script>
+<script src="~/js/trumbowyg.allowtagsfrompaste.min.js"></script>
+<script src="~/js/jquery.datetimepicker.js"></script>
 <script>
+$("input:text").click(function() {
+    $(this).parent().find("input:file").click();
+});
+
+    $('input:file', '.ui.action.input').on('change', function (e) {
+        var name = e.target.files[0].name;
+        $('input:text', $(e.target).parent()).val(name);
+    });
+
     $(document).ready(function () {
+        $('.ui.dropdown').dropdown();
+
+        @{ var userName = Context.Session.GetString("UserName"); }
+        var fullname = '@userName';
+
+        if (fullname == null || fullname == '') {
+            $('#newRequest').removeClass('show');
+            $('#newRequest').addClass('hide');
+            $('#noNewRequest').addClass('show');
+            $('#noNewRequest').removeClass('hide');
+            $('#btnAddRequest').addClass('hide');
+            $('#btnAddRequest').removeClass('show');
+        }
+        else {
+            $('#newRequest').removeClass('hide');
+            $('#newRequest').addClass('show');
+            $('#noNewRequest').addClass('hide');
+            $('#noNewRequest').removeClass('show');
+            $('#btnAddRequest').addClass('show');
+            $('#btnAddRequest').removeClass('hide');
+        }
+        
+
+        var formValidationRules =
+        {
+            Requests_ProjectName: {
+                identifier: 'ProjectName',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'You need to enter a Project Name!'
+                    },
+                    {
+                        type: 'doesntContain['+fullname+']',
+                        prompt: 'You need to enter a Project Name, not your name!'
+                    }
+                ]
+            },
+            Requests_Carriers: {
+                identifier: 'Carriers',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please choose a Carrier!'
+                    }
+                ]
+            },
+            Requests_RequestType: {
+                identifier: 'RequestType',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please choose a Request Type!'
+                    }
+                ]
+            },
+            dcRequestReviewDate: {
+                identifier: 'RequestReviewDate',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please choose a Date to perform your Review by!'
+                    }
+                ]
+            },
+            Requests_ProjectorCode: {
+                identifier: 'ProjectorCode',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter a Projector Code!'
+                    },
+                    {
+                    type   : 'exactLength[11]',
+                    prompt : 'Your Projector Code is invalid, please use a format like P000000-000!'
+                  }
+                ]
+            },
+            Requests_Duration1: {
+                identifier: 'IssueDuration',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter your Duration!'
+                    },
+                    {
+                    type   : 'integer[1..100]',
+                    prompt : 'Please enter a Duration of 1-100!'
+                  }
+                ]
+            },
+            Requests_DurationType1: {
+                identifier: 'IssueDurationType',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter your Duration!'
+                    },
+                ]
+            },
+            Requests_Duration2: {
+                identifier: 'Requests_Duration2',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter your Duration!'
+                    },
+                    {
+                    type   : 'integer[1..100]',
+                    prompt : 'Please enter a Duration of 1-100!'
+                  }
+                ]
+            },
+            Requests_DurationType2: {
+                identifier: 'Requests_DurationType2',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter your Duration!'
+                    },
+                ]
+            },
+            Requests_WebServiceURLs: {
+                identifier: 'WebServiceURLs',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please identify a URL!'
+                    },
+                ]
+            },
+            //they should be testing, this is no longer required
+            //Requests_TestTime: {
+            //    identifier: 'TestTime',
+            //    rules: [
+            //        {
+            //            type: 'empty',
+            //            prompt: 'Please identify a time to perform the Load Test!'
+            //        },
+            //    ]
+            //},
+            Requests_Description: {
+                identifier: 'txtDescription',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter a description of the request!'
+                    }
+                ]
+            }
+        }
+
+        $('#frmRequest').form({
+            fields: formValidationRules,
+            inline: true
+        });
+
         $('#txtDescription').trumbowyg({
             btns: [
                 ['formatting'],
@@ -19,7 +203,6 @@
         });
         var dateToday = new Date();
         dateToday.setDate(dateToday.getDate() + 2);
-        //$("body select").msDropDown();
         $('#dcTestTime').datetimepicker(
             {
                 format: 'm/d/Y H:i',
@@ -36,279 +219,515 @@
                 minDate: dateToday,
                 beforeShowDay: function(date){ return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5,""]}}
         );
-        $('#dcIssueDate').datetimepicker(
-            {
-                format: 'm/d/Y',
-                step: 60,
-                timepicker: false,
-                minDate: dateToday,
-                beforeShowDay: function(date){ return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5,""]}}
-        );
 
-         $('#dcFeaReviewDate').datetimepicker(
-            {
-                format: 'm/d/Y',
-                step: 60,
-                timepicker: false,
-                minDate: dateToday,
-                beforeShowDay: function(date){ return [date.getDay() == 1 || date.getDay() == 2 || date.getDay() == 3 || date.getDay() == 4 || date.getDay() == 5,""]}}
-        );
+        $("#Requests_RequestType option[value='4']").remove(); //feasibility
 
-        $('#frmRequest').submit(function (e) {
+        if (@Model.Requests.RequestType != "") { changeDisplay(@Model.Requests.RequestType)}
+    });
 
-            var formData = new FormData(this);
+    $('#frmRequest').submit(function (e) {
+    e.preventDefault();
+    var formData = new FormData(this);
 
-            $('input[name="Questionaire"]').each(function(a, b) {
-            var fileInput = $('input[name="Questionaire"]')[a];
-            if (fileInput.files.length > 0) {
-                var file = fileInput.files[0];
-                formData.append("Questionaire", file);
+    $('input[name="Questionaire"]').each(function(a, b) {
+        var fileInput = $('input[name="Questionaire"]')[a];
+        if (fileInput.files.length > 0) {
+            var file = fileInput.files[0];
+            formData.append("Questionaire", file);
+        }
+    });
+
+    $('input[name="LoadTestResult"]').each(function(a, b) {
+    var fileInput = $('input[name="LoadTestResult"]')[a];
+        if (fileInput.files.length > 0) {
+            var file = fileInput.files[0];
+            formData.append("LoadTestResult", file);
+        }
+    });
+
+    $.ajax({
+        url: '@Url.Action("AddRequest", "Request")',
+        type: "POST",
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function (result) {
+            if (result.success == true) {
+                $('#errMessage').attr('class', 'hidden ui-state-error ui-corner-all');
+                $('#myModal').modal('hide');
+                setTimeout(window.location.reload(), '1500');
             }
-        });
+            else if (result.success == false) {
+                    $('#errMessage').html("");
+                    $('#errMessage').attr('class', 'ui-state-error ui-corner-all');
+                    $('<div><p style="margin-top: 8px;"><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .5em;  margin-top: 2px;"></span>Please fill out all required fields</p></div>').appendTo('#errMessage');
+            }
+        },
+        error: function (result) {
+            document.write(result.responseText);
+            $('#errMessage').attr('class', 'ui-state-error ui-corner-all');
+            $('errMessage').val = result.responseText;
+        }
+    });
+        return false;
+});
 
+    $('#Questionaire').on('change', function () {
+        //get the file name
+        var fileName = $(this).val();
+        //replace the "Choose a file" label
+        fileName = fileName.substring(fileName.lastIndexOf("\\") + 1, fileName.length);
+        $(this).next('#questionaireLabel').html(fileName);
+    });
+
+    $('#LoadTestResult').on('change', function () {
+        //get the file name
+        var fileName = $(this).val();
+        //replace the "Choose a file" label
+        fileName = fileName.substring(fileName.lastIndexOf("\\") + 1, fileName.length);
+        $(this).next('#LoadTestResult').html(fileName);
+    });
+
+    function handleKeyPress(e) {
+        if (e.keyCode == keyCode.enter) {
+            e.preventDefault();
+            //alert("Enter was pressed");
+            return false;
+        }
+    }
+
+function changeDisplay(requestType) {
+    if (requestType == '1') {
+        $('#WebService_CodeReview').removeClass('hide');
+        $('#WebService_CodeReview').addClass('show');
+        $('#WebService_LoadTest').removeClass('show');
+        $('#WebService_LoadTest').addClass('hide');
+        $('#SARequest').removeClass('show');
+        $('#SARequest').addClass('hide');
+        $('#Request_Issue_Add').removeClass('show');
+        $('#Request_Issue_Add').addClass('hide');
+        $('#lblDescription').text('Description of Request');
+        $('#RequestReviewDate').removeClass('hide');
+        $('#RequestReviewDate').addClass('show');
+        $('#dcRequestReviewDate').prop("disabled", false);
+        $('#IssueDurationType').prop("disabled", true);
+        $('#IssueDuration').prop("disabled", true);
+        $('#Requests_DurationType2').prop("disabled", true);
+        $('#Requests_Duration2').prop("disabled", true);
+        $('#LoadTestResult').prop("disabled", true);
+        $('#dcTestTime').prop("disabled", true);
+        $('#Requests_WebServiceURLs').prop("disabled", true);
+    }
+    else if (requestType == '2') {
+        $('#WebService_CodeReview').removeClass('show');
+        $('#WebService_CodeReview').addClass('hide');
+        $('#WebService_LoadTest').removeClass('hide');
+        $('#WebService_LoadTest').addClass('show');
+        $('#myLoadTestContainer').addClass('show');
+        $('#SARequest').removeClass('show');
+        $('#SARequest').addClass('hide');
+        $('#Request_Issue_Add').removeClass('show');
+        $('#Request_Issue_Add').addClass('hide');
+        $('#lblDescription').text('Description of Request');
+        $('#RequestReviewDate').removeClass('show');
+        $('#RequestReviewDate').addClass('hide');
+        $('#dcRequestReviewDate').prop("disabled", true);
+        $('#IssueDurationType').prop("disabled", true);
+        $('#IssueDuration').prop("disabled", true);
+        $('#Requests_DurationType2').prop("disabled", true);
+        $('#Requests_Duration2').prop("disabled", true);
+        $('#LoadTestResult').prop("disabled", false);
+        $('#dcTestTime').prop("disabled", false);
+        $('#Requests_WebServiceURLs').prop("disabled", false);
+    }
+    else if (requestType == '3') {
+        $('#WebService_CodeReview').removeClass('show');
+        $('#WebService_CodeReview').addClass('hide');
+        $('#WebService_LoadTest').addClass('hide');
+        $('#WebService_LoadTest').removeClass('show');
+        $('#SARequest').removeClass('show');
+        $('#SARequest').addClass('hide');
+        $('#Request_Issue_Add').removeClass('hide');
+        $('#Request_Issue_Add').addClass('show');
+        $('#lblDescription').text('Description of Request');
+        $('#RequestReviewDate').removeClass('hide');
+        $('#RequestReviewDate').addClass('show');
+        $('#dcRequestReviewDate').prop("disabled", false);
+        $('#IssueDurationType').prop("disabled", false);
+        $('#IssueDuration').prop("disabled", false);
+        $('#Requests_DurationType2').prop("disabled", false);
+        $('#Requests_Duration2').prop("disabled", false);
+        $('#LoadTestResult').prop("disabled", true);
+        $('#dcTestTime').prop("disabled", true);
+        $('#Requests_WebServiceURLs').prop("disabled", true);
+    }
+    else if (requestType == '4') {
+        $('#WebService_CodeReview').removeClass('show');
+        $('#WebService_CodeReview').addClass('hide');
+        $('#WebService_LoadTest').removeClass('show');
+        $('#WebService_LoadTest').addClass('hide');
+        $('#SARequest').removeClass('hide');
+        $('#SARequest').addClass('show');
+        $('#Request_Issue_Add').removeClass('show');
+        $('#Request_Issue_Add').addClass('hide');
+        $('#lblDescription').text('Description of Request');
+        $('#RequestReviewDate').removeClass('hide');
+        $('#RequestReviewDate').addClass('show');
+        $('#dcRequestReviewDate').prop("disabled", false);
+        $('#IssueDurationType').prop("disabled", true);
+        $('#IssueDuration').prop("disabled", true);
+        $('#Requests_DurationType2').prop("disabled", true);
+        $('#Requests_Duration2').prop("disabled", true);
+        $('#LoadTestResult').prop("disabled", true);
+        $('#dcTestTime').prop("disabled", true);
+        $('#Requests_WebServiceURLs').prop("disabled", true);
+    }
+    else if (requestType == '5') {
+        $('#WebService_CodeReview').removeClass('show');
+        $('#WebService_CodeReview').addClass('hide');
+        $('#WebService_LoadTest').removeClass('show');
+        $('#WebService_LoadTest').addClass('hide');
+        $('#SARequest').removeClass('show');
+        $('#SARequest').addClass('hide');
+        $('#Request_Issue_Add').removeClass('show');
+        $('#Request_Issue_Add').addClass('hide');
+        $('#lblDescription').text('Description of Concern');
+        $('#RequestReviewDate').removeClass('show');
+        $('#RequestReviewDate').addClass('hide');
+        $('#dcRequestReviewDate').prop("disabled", true);
+        $('#IssueDurationType').prop("disabled", true);
+        $('#IssueDuration').prop("disabled", true);
+        $('#Requests_DurationType2').prop("disabled", true);
+        $('#Requests_Duration2').prop("disabled", true);
+        $('#LoadTestResult').prop("disabled", true);
+        $('#dcTestTime').prop("disabled", true);
+        $('#Requests_WebServiceURLs').prop("disabled", true);
+    }
+    else {
+        $('#WebService_CodeReview').removeClass('show');
+        $('#WebService_CodeReview').addClass('hide');
+        $('#WebService_LoadTest').removeClass('show');
+        $('#WebService_LoadTest').addClass('hide');
+        $('#SARequest').removeClass('show');
+        $('#SARequest').addClass('hide');
+        $('#Request_Issue_Add').removeClass('show');
+        $('#Request_Issue_Add').addClass('hide');
+        $('#lblDescription').text('Description of Request');
+        $('#RequestReviewDate').removeClass('show');
+        $('#RequestReviewDate').addClass('hide');
+        $('#dcRequestReviewDate').prop("disabled", true);
+        $('#IssueDurationType').prop("disabled", true);
+        $('#IssueDuration').prop("disabled", true);
+        $('#Requests_DurationType2').prop("disabled", true);
+        $('#Requests_Duration2').prop("disabled", true);
+        $('#LoadTestResult').prop("disabled", true);
+        $('#dcTestTime').prop("disabled", true);
+        $('#Requests_WebServiceURLs').prop("disabled", true);
+    }
+    }
+
+        $('#frmAddLoadTest').submit(function (e) {
+        var formData = new FormData(this);
         $.ajax({
-            url: '@Url.Action("AddRequest", "Home")',
+            url: '@Url.Action("AddLoadTest", "LoadTest")',
             type: "POST",
             data: formData,
             contentType: false,
             processData: false,
-            success: function (result) {
-                if (result.success == true) {
-                    $('#errMessage').attr('class', 'hidden ui-state-error ui-corner-all');
-                   $('#myModal').modal('hide');
-                    window.location.reload();
-                }
-                else if (result.success == false) {
-                        $('#errMessage').html("");
-                        $('#errMessage').attr('class', 'ui-state-error ui-corner-all');
-                        $('<div><p style="margin-top: 8px;"><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .5em;  margin-top: 2px;"></span>Please fill out all required fields</p></div>').appendTo('#errMessage');
-                }
+            success: function (data) {
+                $('#myAddLoadTestModal').modal('hide');
+                $('#modLoadTestHide').dimmer('hide');
+                $('#myLoadTestContainer').html(data);
+                $('body').addClass('modal-open');
             },
-            error: function (result) {
-                document.write(result.responseText);
-                $('#errMessage').attr('class', 'ui-state-error ui-corner-all');
-                $('errMessage').val = result.responseText;
+            error: function (data) {
+                console.log("Error: " + data.responseText);
+                $('#myAddLoadTestModal').modal('hide');
+                $('#myLoadTestContainer').html(data);
+
             }
         });
         e.preventDefault();
+        return false;
         });
+     
+    function DeleteLoadTestModal(interfaceName, loadTestId, ticketNum, CarrierID) {
+        $('#txtinterfaceName').val(interfaceName);
+        $('#txtTicketNumber').val(ticketNum);
+        $('#txtLoadTestID').val(loadTestId);
+        $('#txtCarrierID').val(CarrierID);
+        $('#lblDeleteLoadTestMessage').text('Are you sure you want to DELETE ' + decodeHtml(interfaceName) + '?');
+         $('#modLoadTestHide').dimmer('show');
 
-        $('#Questionaire').on('change', function () {
-            //get the file name
-            var fileName = $(this).val();
-            //replace the "Choose a file" label
-            fileName = fileName.substring(fileName.lastIndexOf("\\") + 1, fileName.length);
-            $(this).next('#questionaireLabel').html(fileName);
-        });
+         $('#myDeleteLoadTestModal').modal({
+             closable: false,
+             transition: 'scale',
+             allowMultiple: true,
+             onDeny: function () {
+                 console.log('approved for deletion');
+                 DeleteLoadTest(loadTestId, ticketNum, CarrierID);
+             }
+         }).modal('show');
+    }
 
-        if (@Model.Requests.RequestType != "") { changeDisplay(@Model.Requests.RequestType)}
-    });
-    function changeDisplay(requestType) {
-        if (requestType == '1') {
-            $('#WebService_CodeReview').removeClass('hide');
-            $('#WebService_CodeReview').addClass('show');
-            $('#WebService_LoadTest').removeClass('show');
-            $('#WebService_LoadTest').addClass('hide');
-            $('#SARequest').removeClass('show');
-            $('#SARequest').addClass('hide');
-            $('#Request_Issue_Add').removeClass('show');
-            $('#Request_Issue_Add').addClass('hide');
-            $('#lblDescription').text('Description of Request');
-            $('#Questionaire').removeAttr('required');
-        }
-        else if (requestType == '2') {
-            $('#WebService_CodeReview').removeClass('show');
-            $('#WebService_CodeReview').addClass('hide');
-            $('#WebService_LoadTest').removeClass('hide');
-            $('#WebService_LoadTest').addClass('show');
-            $('#SARequest').removeClass('show');
-            $('#SARequest').addClass('hide');
-            $('#Request_Issue_Add').removeClass('show');
-            $('#Request_Issue_Add').addClass('hide');
-            $('#lblDescription').text('Description of Request');
-            $('#Questionaire').removeAttr('required');
-        }
-        else if (requestType == '3') {
-            $('#WebService_CodeReview').removeClass('show');
-            $('#WebService_CodeReview').addClass('hide');
-            $('#WebService_LoadTest').addClass('hide');
-            $('#WebService_LoadTest').removeClass('show');
-            $('#SARequest').removeClass('show');
-            $('#SARequest').addClass('hide');
-            $('#Request_Issue_Add').removeClass('hide');
-            $('#Request_Issue_Add').addClass('show');
-            $('#lblDescription').text('Description of Request');
-            $('#Questionaire').removeAttr('required');
-        }
-        else if (requestType == '4') {
-            $('#WebService_CodeReview').removeClass('show');
-            $('#WebService_CodeReview').addClass('hide');
-            $('#WebService_LoadTest').removeClass('show');
-            $('#WebService_LoadTest').addClass('hide');
-            $('#SARequest').removeClass('hide');
-            $('#SARequest').addClass('show');
-            $('#Request_Issue_Add').removeClass('show');
-            $('#Request_Issue_Add').addClass('hide');
-            $('#Questionaire').prop('required',true);
-            $('#lblDescription').text('Description of Request');
-        }
-        else if (requestType == '5') {
-            $('#WebService_CodeReview').removeClass('show');
-            $('#WebService_CodeReview').addClass('hide');
-            $('#WebService_LoadTest').removeClass('show');
-            $('#WebService_LoadTest').addClass('hide');
-            $('#SARequest').removeClass('show');
-            $('#SARequest').addClass('hide');
-            $('#Request_Issue_Add').removeClass('show');
-            $('#Request_Issue_Add').addClass('hide');
-            $('#lblDescription').text('Description of Concern');
-            $('#Questionaire').removeAttr('required');
-        }
-        else {
-            $('#WebService_CodeReview').removeClass('show');
-            $('#WebService_CodeReview').addClass('hide');
-            $('#WebService_LoadTest').removeClass('show');
-            $('#WebService_LoadTest').addClass('hide');
-            $('#SARequest').removeClass('show');
-            $('#SARequest').addClass('hide');
-            $('#Request_Issue_Add').removeClass('show');
-            $('#Request_Issue_Add').addClass('hide');
-            $('#lblDescription').text('Description of Request');
-            $('#Questionaire').removeAttr('required');
-        }
-    };
+    function CloseDeleteLoadTestModal() {
+        $('#myDeleteLoadTestModal').modal('hide');
+        $('#modLoadTestHide').dimmer('hide');
+    }
 </script>
 
 @Html.HiddenFor(model => model.Requests.RequestId)
-<div class="row">
-    <div class="form-group col-6">
-        <label for="Requests_ProjectName" class="col-form-label-sm">Project/Request Name</label>
-        <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-                <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">class</i></span>
-            </div>
-            @Html.EditorFor(model => model.Requests.ProjectName, new { htmlAttributes = new { @class = "form-control", required = "required", autocomplete="off" } })
-            <span class="icon-validation" data-icon="&#xe000"></span>
+@Html.HiddenFor(model => model.Requests.CarrierName)
+<div id="noNewRequest" class="hide">
+    We're sorry, you cannot submit a request because your session has expired.  Please clear your cache and click <a href="https://sa-workplace.dv.ipipenet.com">here.</a>
+</div>
+<div id="newRequest">
+<div class="two fields">
+    <div class="eight wide field">
+        <label for="Requests_ProjectName">Project/Request Name (e.g. NGSD Conversion)</label>
+        <div class="ui labeled input">
+            <label for="Requests_ProjectName" class="ui ltgray label"><i class="icon archive"></i></label>
+
+            <input type="text" id="@Html.IdFor(model => model.Requests.ProjectName)" name="@Html.NameFor(model => model.Requests.ProjectName)" autocomplete="off" data-validate="ProjectName" onkeypress="handleKeyPress(event);" />
         </div>
     </div>
-    <div class="form-group col-6">
-        <label for="Requests_CarrierId" class="col-form-label-sm">Carrier</label>
-        <div class="input-group input-group-sm mb-3">
-            <div class="input-group-prepend">
-                <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">account_balance</i></span>
-            </div>
-            @Html.DropDownListFor(model => model.Requests.CarrierId, new SelectList(Model.Carriers, "CarrierId", "CarrierName"), "--Choose Carrier--", new { @class = "form-control", required="required",autocomplete="off" })
-            @*<select name="@Html.NameFor(x=>x.Requests.CarrierId)" id="@Html.IdFor(x=>x.Requests.CarrierId)" class="form-control" required>
-                        <option value="">--Choose Carrier--</option>
-                        @foreach (var carrier in Model.Carriers)
+    <div class="eight wide field">
+        <label>Carrier</label>
+        <div class="ui labeled input">
+            <label for="Requests_CarrierId" class="ui ltgray label"><i class="icon building"></i></label>
+            <select id="@Html.IdFor(model => model.Requests.CarrierId)" name="@Html.NameFor(model => model.Requests.CarrierId)" data-validate="Carriers" class="ui fluid search selection dropdown">
+                <option value=""></option>
+                @{
+                    foreach (var carrier in Model.Carriers)
+                    {
+                        <option value="@carrier.CarrierId">@carrier.CarrierName</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+</div>
+<div class="two fields">
+    <div class="eight wide field">
+        <label>Request Type</label>
+        <div class="ui labeled input">
+            <label class="ui ltgray label"><i class="icon sitemap"></i></label>
+            <select id="@Html.IdFor(model => model.Requests.RequestType)" name="@Html.NameFor(model => model.Requests.RequestType)" data-validate="RequestType" onchange="changeDisplay(this.value);" class="ui fluid selection dropdown" style="width:450px">
+                <option value=""></option>
+                @{
+                    foreach (var requestType in Model.RequestTypes)
+                    {
+                        if (requestType.RequestType != 4 && requestType.RequestType < 99)
                         {
-                            <option value="@carrier.CarrierId" data-imagecss="ddLogo" data-image="@carrier.CarrierLogo">@carrier.CarrierName</option>
+                            <option value="@requestType.RequestType">@requestType.RequestName</option>
                         }
-                    </select>*@
-                </div>
+
+                    }
+                }
+            </select>
+        </div>
+    </div>
+    <div class="eight wide field">
+        <label>Projector Code</label>
+        <div class="ui labeled input">
+            <label for="ProjectorCode" class="ui ltgray label"><i class="icon window restore"></i></label>
+
+            <input type="text" id="@Html.IdFor(model => model.Requests.ProjectorCode)" name="@Html.NameFor(model => model.Requests.ProjectorCode)" data-validate="ProjectorCode" autocomplete="off">
+        </div>
+    </div>
+</div>
+
+<div id="RequestReviewDate" class="hide">
+    <div class="two fields">
+        <div class="eight wide field">
+            <label>Requested Due Date</label>
+            <div class="ui labeled input">
+                <label for="Requests_RequestReviewDate" class="ui ltgray label"><i class="icon calendar alternate"></i></label>
+                <input type="text" id="dcRequestReviewDate" name="@Html.NameFor(model => model.Requests.RequestReviewDate)" autocomplete="off" data-validate="RequestReviewDate" />
             </div>
         </div>
-        <div class="row">
-            <div class="form-group col-6">
-                <label for="Requests_RequestType" class="col-form-label-sm">Request Type</label>
-                <div class="input-group input-group-sm mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">dynamic_feed</i></span>
-                    </div>
-                    @Html.DropDownListFor(model => model.Requests.RequestType, new SelectList(Model.RequestTypes, "RequestType", "RequestName"), "--Choose Request Type--", new { @class = "form-control", @onchange="changeDisplay(this.value);", required="required",autocomplete="off" })
-                </div>
-            </div>
-            <div class="form-group col-6">
-                <label for="Requests_ProjectName" class="col-form-label-sm">Projector Code</label>
-                <div class="input-group input-group-sm mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">home_work</i></span>
-                    </div>
-                    @Html.EditorFor(model => model.Requests.ProjectorCode, new { htmlAttributes = new { @class = "form-control", required="required",autocomplete="off" } })
-                </div>
-            </div>
-        </div>
-        <div id="WebService_CodeReview" class="hide">
-            <div class="row">
-                <div class="form-group col-6">
-                    <label for="Requests_TFSPath" class="col-form-label-sm">TFS Path</label>
-                    <div class="input-group input-group-sm mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">list</i></span>
+        <div id="Request_Issue_Add" class="hide eight wide field">
+            <div class="field">
+                <label>Duration or Effort</label>
+                <div class="three fields">
+                    <div class="six wide field">
+                        <div class="ui labeled input">
+                            <label for="Requests_Duration1" class="ui ltgray label"><i class="icon chart line"></i></label>
+                            <input type="text" id="IssueDuration" name="@Html.NameFor(model => model.Requests.Duration1)" autocomplete="off" data-validate="Duration1" />
                         </div>
-                        @Html.EditorFor(model => model.Requests.TFSPath, new { htmlAttributes = new { @class = "form-control",autocomplete="off" } })
                     </div>
-                </div>
-                <div class="form-group col-6">
-                    <label for="Requests_RequestReviewDate" class="col-form-label-sm">Requested Due Date</label>
-                    <div class="input-group input-group-sm mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">av_timer</i></span>
+                    <div class="two wide field">
+                        <small>hour(s) /</small>
+                    </div>
+                    <div class="eight wide field">
+                        <div class="ui labeled input">
+                            <label for="Requests_DurationType1" class="ui ltgray label"><i class="icon book"></i></label>
+                            <select id="IssueDurationType" name="@Html.NameFor(model => model.Requests.DurationType1)" data-validate="DurationType1">
+                                <option value=""></option>
+                                @{
+                                    foreach (var durationType1 in Model.DurationTypes)
+                                    {
+                                        <option value="@durationType1.Value">@durationType1.Name</option>
+                                    }
+                                }
+                            </select>
                         </div>
-                        @Html.EditorFor(model => model.Requests.RequestReviewDate, new { htmlAttributes = new { @class = "form-control", @id="dcRequestReviewDate",@type="text",autocomplete="off" } })
                     </div>
                 </div>
             </div>
-        </div>
-        <div id="WebService_LoadTest" class="hide">
-            <div class="row">
-                <div class="form-group col-6">
-                    <label for="Requests_WebServiceURLs" class="col-form-label-sm">Web Service URLs</label>
-                    <div class="input-group input-group-sm mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">http</i></span>
+            <div class="field">
+                <label>For</label>
+                <div class="three fields">
+                    <div class="six wide field">
+                        <div class="ui labeled input">
+                            <label for="Requests_Duration2" class="ui ltgray label"><i class="icon chart line"></i></label>
+                            <input type="text" id="@Html.IdFor(model => model.Requests.Duration2)" name="@Html.NameFor(model => model.Requests.Duration2)" data-validate="Duration2" autocomplete="off" />
                         </div>
-                        @Html.EditorFor(model => model.Requests.WebServiceURLs, new { htmlAttributes = new { @class = "form-control",autocomplete="off" } })
                     </div>
-                </div>
-                <div class="form-group col-6">
-                    <label for="Requests_TestTime" class="col-form-label-sm">Preferred Test Time</label>
-                    <div class="input-group input-group-sm mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">av_timer</i></span>
+                    <div class="two wide field">
+                        <h5>&nbsp;</h5>
+                    </div>
+                    <div class="eight wide field">
+                        <div class="ui labeled input">
+                            <label for="Requests_DurationType2" class="ui ltgray label"><i class="icon book"></i></label>
+
+                            <select id="@Html.IdFor(model => model.Requests.DurationType2)" name="@Html.NameFor(model => model.Requests.DurationType2)" data-validate="DurationType2">
+                                <option value=""></option>
+                                @{
+                                    foreach (var durationType2 in Model.DurationTypes)
+                                    {
+                                        <option value="@durationType2.Value">@durationType2.Name</option>
+                                    }
+                                }
+                            </select>
                         </div>
-                        @Html.EditorFor(model => model.Requests.TestTime, new { htmlAttributes = new { @class = "form-control", @id="dcTestTime",@type="text",@autocomplete="off" } })
                     </div>
                 </div>
             </div>
-        </div>
-        <div id="Request_Issue_Add" class="hide">
-            <div class="row">
-                <div class="form-group col-6">
-                    <label for="Requests_IssueReviewDate" class="col-form-label-sm">Requested Due Date</label>
-                    <div class="input-group input-group-sm mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">av_timer</i></span>
-                        </div>
-                        @Html.EditorFor(model => model.Requests.IssueReviewDate, new { htmlAttributes = new { @class = "form-control", @id = "dcIssueDate", @type = "text",autocomplete="off" } })
+            <div class="fields">
+                <div class="sixteen wide field">
+                    <div class="ui ignored info attached message">
+                        <b>How much of the SA's time will you need?</b> <br />
+                        Eg: "1 hour meeting", "2 hours per week for 1 month", etc.
                     </div>
                 </div>
-            </div>
-        </div>
-        <div id="SARequest" class="hide">
-            <div class="row">
-                <div class="form-group col-6">
-                    <label class="col-form-label-sm">Questionaire</label>
-                    <div class="custom-file">
-                        <input type="file" id="Questionaire" name="Questionaire" class="custom-file-input" accept=".docx" placeholder="Please choose your Questionaire...">
-                        <label class="custom-file-label" id="questionaireLabel" name="questionaireLabel" for="CSD">Please Upload your Completed Questionaire</label>
-                    </div>
-                </div>
-                <div class="form-group col-6">
-                    <label for="Requests_FeasibilityReviewDate" class="col-form-label-sm">Requested Review Date</label>
-                    <div class="input-group input-group-sm mb-3">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text" id="inputGroupPrepend"><i class="material-icons md-18">av_timer</i></span>
-                        </div>
-                        @Html.EditorFor(model => model.Requests.FeasibilityReviewDate, new { htmlAttributes = new { @class = "form-control", @id = "dcFeaReviewDate", @type = "text",autocomplete="off" } })
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="form-group col-12">
-                <label for="Requests_RequestDesc" class="col-form-label-sm" id="lblDescription">Description of Request</label>
-                @Html.TextAreaFor(model => model.Requests.RequestDesc, new { @class = "form-control", @id = "txtDescription",autocomplete="off" })
             </div>
         </div>
 
+        <div id="WebService_CodeReview" class="hide eight wide field">
+            <label for="Requests_TFSPath">TFS Path</label>
+            <div class="ui labeled input">
+                <label for="Requests_RequestReviewDate" class="ui ltgray label"><i class="icon folder open"></i></label>
+                <input type="text" id="@Html.IdFor(model => model.Requests.TFSPath)" name="@Html.NameFor(model => model.Requests.TFSPath)" autocomplete="off" data-validate="TFSPath" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="WebService_LoadTest" class="hide">
+    <div class="two fields">
+        @*<div class="eight wide field">
+                <label for="loadtestresultLabel">SOAP UI Load Test Result</label>
+                <div class="ui action input">
+                    <input type="text" placeholder="Please choose your Load Test Result..." readonly>
+                    <input type="file" accept=".docx" id="LoadTestResult" name="LoadTestResult">
+                    <div class="ui icon button">
+                        <i class="attach icon"></i>
+                    </div>
+                </div>
+            </div>*@
+        <div class="sixteen wide field">
+            <div class="ui ignored info attached message">
+                It is highly recommended that you perform your own load test and upload the results.  For more information, please refer to this document on SharePoint -
+                @*(<a href="https://ipipeline.sharepoint.com/sites/ProfessionalServices/professionalservicesus/Technology/Shared%20Documents/Performance%20%26%20Load%20Testing/SOAP%20UI%20Load%20Testing.docx?d=wc1d87c7b101243bfb9c96c90fef6918c&csf=1&e=T0juQO" target="_blank">click here</a>).*@
+                <a href="https://ipipeline.sharepoint.com/sites/ProfessionalServices/professionalservicesus/Technology/PS%20Technology/3%20-%20Feature%20Implementations%20%26%20Integrations/Web%20Services/SOAP%20UI%20Load%20Testing.docx?d=w8a7a195cc6964cc7bca6f67774411e6a&csf=1&web=1" target="_blank"><u>SoapUI Load Testing.</u></a>
+                <i> If you still need this to be run by the SA team, please fill out the the form.</i>
+            </div>
+        </div>
+    </div>
+    <hr />
+    <div class="two fields">
+        <div class="sixteen wide field" id="myLoadTestContainer">
+            <label for="loadtestresultLabel">Input the SoapUI Load Test Results here:</label>
+            @{
+                LoadTestDisplayModel loadtestModel = new LoadTestDisplayModel();
+                loadtestModel.TicketNumber = Model.Requests.TicketNumber;
+                loadtestModel.LoadTests = Model.LoadTestResults;
+                loadtestModel.CarrierID = Model.Requests.CarrierId;
+                await Html.RenderPartialAsync("/Views/Partial/LoadTestResults.cshtml", loadtestModel);
+            }
+        </div>
+    </div>
+    <hr />
+
+    <div class="two fields">
+        <div class="eight wide field">
+            <label>Web Service URLs</label>
+            <div class="ui labeled input">
+                <label for="WebServiceURLs" class="ui ltgray label"><i class="icon globe"></i></label>
+                <input type="text" id="@Html.IdFor(model => model.Requests.WebServiceURLs)" name="@Html.NameFor(model => model.Requests.WebServiceURLs)" data-validate="WebServiceURLs" autocomplete="off">
+            </div>
+        </div>
+
+        <div class="eight wide field">
+            <label>Preferred Test Time</label>
+            <div class="ui labeled input">
+                <label for="TestTime" class="ui ltgray label"><i class="icon clock"></i></label>
+                <input type="text" id="dcTestTime" name="@Html.NameFor(model => model.Requests.TestTime)" data-validate="TestTime" autocomplete="off" onchange="this.setCustomValidity('')" oninvalid="this.setCustomValidity('Please enter a time when you or the SA team will perform this load test')">
+            </div>
+        </div>
+    </div>
+</div>
+<div id="SARequest" class="hide">
+    <div class="row">
+        <div class="form-group col-6">
+            <label class="col-form-label-sm">Questionaire</label>
+            <div class="custom-file">
+                <input type="file" id="Questionaire" name="Questionaire" class="custom-file-input" accept=".docx" placeholder="Please choose your Questionaire...">
+                <label class="custom-file-label" id="questionaireLabel" name="questionaireLabel" for="CSD">Please Upload your Completed Questionaire</label>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="one fields">
+    <div class="sixteen wide field">
+        <label id="lblDescription">Description of Request</label>
+        @Html.TextAreaFor(model => model.Requests.RequestDesc, new { @id = "txtDescription", autocomplete = "off" })
+    </div>
+</div>
+</div>
+<div class="ui small modal" aria-labelledby="myDeleteLoadTestModal" id="myDeleteLoadTestModal">
+    <div class="header inverted" style="background-color:black">
+        <div class="ui grid">
+            <div class="ui fifteen wide column"><h3 id="modalAddTitle" style="color:white">Delete Load Test</h3></div>
+        </div>
+    </div>
+    <div class="content">
+        <p style="margin:10px 10px 10px 10px"><label id="lblDeleteLoadTestMessage" style="color:red;"></label></p>
+        <input type="hidden" id="txtLoadTestID" />
+        <input type="hidden" id="txtTicketNumber" />
+        <input type="hidden" id="txtinterfaceName" />
+        <input type="hidden" id="txtCarroerID" />
+    </div>
+    <div class="actions">
+        <button type="button" class="ui basic button close" onclick="CloseDeleteLoadTestModal()">Cancel</button>
+        <button type="button" class="ui basic button negative deny">Delete Load Test!</button>
+    </div>
+</div>
+
+<div class="ui small modal" id="myAddLoadTestModal" aria-labelledby="myAddLoadTestModal">
+    <div class="header inverted" style="background-color:black">
+        <h3 id="modalTitle" style="color:white">Add  Load Test Result</h3>
+    </div>
+    <div class="content">
+        <form asp-action="AddLoadTest" asp-controller="LoadTest" class="ui small form" method="POST" data-ajax="true" data-ajax-update="myAddLoadTestModal" id="frmAddLoadTest" data-ajax-mode="replace">
+            <div class="modal-body" id="PreviewAddLoadTest">
+                @*PartialView*@
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <button type="button" class="ui basic button deny">Cancel</button>
+        <button type="button" class="ui basic button approved positive">Add Load Test Result!</button>
+    </div>
+</div>

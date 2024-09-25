@@ -1,0 +1,270 @@
+﻿@model SAWorkplace.Models.LoadTestDisplayModel
+@using Microsoft.AspNetCore.Http;
+
+<link rel="stylesheet" href="~/css/jquery.datetimepicker.css" />
+<link rel="stylesheet" href="~/css/trumbowyg.colors.css" />
+<link rel="stylesheet" href="~/css/trumbowyg.min.css" />
+
+<script src="~/js/trumbowyg.min.js"></script>
+<script src="~/js/trumbowyg.colors.min.js"></script>
+<script src="~/js/trumbowyg.cleanpaste.min.js"></script>
+<script src="~/js/trumbowyg.allowtagsfrompaste.min.js"></script>
+<script src="~/js/jquery.datetimepicker.js"></script>
+<script>
+    function updateLTSlider(sliderText) {
+        $('#resultSLTlider').html(sliderText);
+        if (sliderText == 'Pass') {
+            $('#btnLTFail').addClass('basic');
+            $('#btnLTPass').removeClass('basic');
+        }
+        else if (sliderText == 'Fail') {
+            $('#btnLTPass').addClass('basic');
+            $('#btnLTFail').removeClass('basic');
+        }
+        else {
+            $('#btnLTPass').addClass('basic');
+            $('#btnLTFail').addClass('basic');
+        }
+        $('#reviewLTStatus').val(sliderText);
+        return false;
+    }
+
+
+    $(document).ready(function () {
+        var dateToday = new Date();
+        dateToday.setDate(dateToday.getDate() + 2);
+
+        $('#dcTestedTime').datetimepicker(
+            {
+                format: 'm/d/Y H:i',
+                formatTime: 'H:i',
+            }
+        );
+
+
+        var formValidationRules =
+        {
+            interfaceName: {
+                identifier: 'InterfaceName',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter an Interface Name!'
+                    }
+                ]
+            },
+            dcTestedTime: {
+                identifier: 'LoadTestTime',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: 'Please enter a Date / Time Tested!'
+                    }
+                ]
+            },
+            Burst_Min: {
+                identifier: 'BurstMin',
+                rules: [
+                    {
+                        type: 'regExp',
+                        value: /\b\d{1,6}\b/,
+                        prompt: 'Your Min Burst time is invalid!'
+                    }
+                ]
+            },
+            Burst_Max: {
+                identifier: 'BurstMax',
+                rules: [
+                    {
+                        type: 'regExp',
+                        value: /\b\d{1,6}\b/,
+                        prompt: 'Your Max Burst time is invalid!'
+                    }
+                ]
+            },
+            Burst_Avg: {
+                identifier: 'BurstAvg',
+                rules: [
+                    {
+                        type: 'regExp',
+                        value: /\b\d{1,6}\b/,
+                        prompt: 'Your Avg Burst time is invalid!'
+                    }
+                ]
+            },
+            Variance_Min: {
+                identifier: 'VarianceMin',
+                rules: [
+                    {
+                        type: 'regExp',
+                        value: /\b\d{1,6}\b/,
+                        prompt: 'Your Min Variance time is invalid!'
+                    }
+                ]
+            },
+            Variance_Max: {
+                identifier: 'VarianceMax',
+                rules: [
+                    {
+                        type: 'regExp',
+                        value: /\b\d{1,6}\b/,
+                        prompt: 'Your Max Variance time is invalid!'
+                    }
+                ]
+            },
+            Variance_Avg: {
+                identifier: 'VarianceAvg',
+                rules: [
+                    {
+                        type: 'regExp',
+                        value: /\b\d{1,6}\b/,
+                        prompt: 'Your Avg Variance time is invalid!'
+                    }
+                ]
+            }
+        }
+
+        $('#frmAddLoadTest').form({
+            fields: formValidationRules,
+            inline: true
+        });
+    });
+
+    function setMoveButton() {
+        return false;
+    }
+
+</script>
+<input type="hidden" value="@Model.TicketNumber" id="ticketNum" name="ticketNum" />
+<input type="hidden" value="@Model.CarrierID" id="carrierId" name="carrierId" />
+
+
+<div id="AddLoadTestContainer">
+    <div class="fields">
+        <div class="sixteen wide field">
+            <label for="InterfaceName">Interface Name</label>
+            <div class="ui labeled input">
+                <label class="ui ltgray label"><i class="icon microchip"></i></label>
+
+                <input type="text" id="interfaceName" name="interfaceName" autocomplete="off" data-validate="InterfaceName" />
+            </div>
+        </div>
+    </div>
+    <div class="two fields">
+        <div class="eight wide field">
+            <label for="Requests_TestTime">Date / Time Tested</label>
+            <div class="ui labeled input">
+                <label class="ui ltgray label"><i class="icon clock"></i></label>
+                <input type="text" id="dcTestedTime" name="dcTestedTime" autocomplete="off" data-validate="LoadTestTime" />
+            </div>
+        </div>
+
+        @{
+            string PSArchitect = Context.Session.GetString("PSArchitect");
+            string viewType = Context.Session.GetString("ViewType");
+
+            if (PSArchitect == "True" && viewType != "User")
+            {
+                <div class="eight wide field">
+                    <label>Review Result</label>
+                    <div class="ui buttons">
+                        <button type="button" class="ui button basic green deny" id="btnLTPass" onclick="updateLTSlider('Pass');">Pass</button>
+                        <div class="or" onclick="updateLTSlider('');"></div>
+                        <button type="button" class="ui button basic red deny" id="btnLTFail" onclick="updateLTSlider('Fail');">Fail</button>
+                    </div>
+                    <div id="resultLTSlider" class="hide"></div>
+                    <input type="hidden" id="reviewLTStatus" name="reviewLTStatus" />
+                </div>
+            }
+        }
+
+    </div>
+    <div class="field2">
+        <div class="sixteen wide field">
+            <table width="702px" border="0" style="font-size:11px">
+                <thead>
+                    <tr>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>Avg</th>
+                    </tr>
+                </thead>
+                <tr>
+                    <td height="18" width="234px">
+                        <div class="sixteen wide field">
+                            <div class="ui right labeled left icon input">
+                                <i class="clock outline icon"></i>
+                                <input type="text" id="Burst_Min" name="Burst_Min" placeholder="Burst Min" autocomplete="off" data-validate="BurstMin" />
+                                <div class="ui ltgray label">
+
+                                    ms
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td height="18" width="234px">
+                        <div class="sixteen wide field">
+                            <div class="ui right labeled left icon input">
+                                <i class="clock outline icon"></i>
+                                <input type="text" id="Burst_Max" name="Burst_Max" placeholder="Burst Max" autocomplete="off" data-validate="BurstMax" />
+                                <div class="ui ltgray label">
+
+                                    ms
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td height="18" width="234px">
+                        <div class="sixteen wide field">
+                            <div class="ui right labeled left icon input">
+                                <i class="clock outline icon"></i>
+                                <input type="text" id="Burst_Avg" name="Burst_Avg" placeholder="Burst Avg" autocomplete="off" data-validate="BurstAvg" />
+                                <div class="ui ltgray label">
+
+                                    ms
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td height="18" width="234px">
+                        <div class="sixteen wide field">
+                            <div class="ui right labeled left icon input">
+                                <i class="clock outline icon"></i>
+                                <input type="text" id="Variance_Min" name="Variance_Min" placeholder="Variance Min" autocomplete="off" data-validate="VarianceMin" />
+                                <div class="ui ltgray label">
+
+                                    ms
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td height="18" width="234px">
+                        <div class="sixteen wide field">
+                            <div class="ui right labeled left icon input">
+                                <i class="clock outline icon"></i>
+                                <input type="text" id="Variance_Max" name="Variance_Max" placeholder="Variance Max" autocomplete="off" data-validate="VarianceMax" />
+                                <div class="ui ltgray label">
+                                    ms
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td height="18" width="234px">
+                        <div class="sixteen wide field">
+                            <div class="ui right labeled left icon input">
+                                <i class="clock outline icon"></i>
+                                <input type="text" id="Variance_Avg" name="Variance_Avg" placeholder="Variance Avg" autocomplete="off" data-validate="VarianceAvg" />
+                                <div class="ui ltgray label">
+
+                                    ms
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

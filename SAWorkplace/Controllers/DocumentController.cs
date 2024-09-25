@@ -18,14 +18,32 @@ namespace SAWorkplace.Controllers
             dContext = context;
         }
 
+        [HttpGet]
+        [Route("Document/DeleteDocument")]
+        public async Task<IActionResult> DeleteDocument(int ticketNum, int requestType)
+        {
+            DataAccess data = new DataAccess(dContext, HttpContext.Session);
+            RequestEditModel requestEdit = new RequestEditModel();
+            requestEdit.Requests = data.LoadRequest(Convert.ToInt32(ticketNum));
+
+            var requestStatus = requestEdit.Requests.RequestStatus;
+            //don't delete if the request is closed
+            if (requestStatus == 3 || requestStatus == 4 || requestStatus == 10 || requestStatus == 15)
+            {
+                return Json(new { success = false, responseType = "Document", responseText = "Document cannot be deleted" });
+            }
+
+            return Json(new { success = true, responseType = "Document", responseText = "Document can be deleted" });
+        }
         [HttpPost]
+        [Route("Document/DeleteDocument")]
         public async Task<IActionResult> DeleteDocument(int documentID, int ticketNum, int requestType)
         {
             var delDocument = dContext.tblDocuments.Find(documentID);
             dContext.tblDocuments.Remove(delDocument);
             dContext.SaveChanges();
 
-            DataAccess data = new DataAccess(dContext);
+            DataAccess data = new DataAccess(dContext, HttpContext.Session);
             DocumentDisplayModel documentModel = new DocumentDisplayModel();
             documentModel.Documents = await data.LoadDocuments(ticketNum);
             documentModel.TicketNumber = ticketNum;
@@ -37,13 +55,15 @@ namespace SAWorkplace.Controllers
         }
 
         [HttpGet]
+        [Route("Document/AddDocument")]
         public IActionResult AddDocument(int ticketNum)
         {
-            
+
             return PartialView("/Views/Modal/AddDocument.cshtml", ticketNum);
         }
 
         [HttpPost]
+        [Route("Document/AddDocument")]
         public async Task<IActionResult> AddDocument([FromServices]ApplicationDBContext context, int ticketNum, int requestType, string documentType, IFormFile Document)
         {
             var DocName = "";
@@ -56,15 +76,16 @@ namespace SAWorkplace.Controllers
 
             var path = Path.Combine(Directory.GetCurrentDirectory(), "Documents\\" + ticketNum);
 
-            System.IO.Directory.CreateDirectory(path + "\\" + documentType);
-            DocDirectory = "Documents/" + ticketNum + "/" + documentType;
-            string QFullName = Path.Combine(DocDirectory, Document.FileName);
+            System.IO.Directory.CreateDirectory(path + "\\" + documentType.Replace(" ", "_"));
+            DocDirectory = "Documents/" + ticketNum + "/" + documentType.Replace(" ", "_");
+            string SavedDocName = Document.FileName.Replace(" ", "_");
+            string QFullName = Path.Combine(DocDirectory, SavedDocName);
             using (FileStream stream = new FileStream(QFullName, FileMode.Create))
             {
                 await Document.CopyToAsync(stream);
             }
 
-            DocName = Document.FileName;
+            DocName = Document.FileName.Replace(" ", "_"); ;
             DocType = documentType;
             DocExt = Path.GetExtension(Document.FileName).Replace(".", "");
             DocModifiedBy = userName;
@@ -82,7 +103,7 @@ namespace SAWorkplace.Controllers
             });
             context.SaveChanges();
 
-            DataAccess data = new DataAccess(dContext);
+            DataAccess data = new DataAccess(dContext, HttpContext.Session);
             DocumentDisplayModel documentModel = new DocumentDisplayModel();
             documentModel.Documents = await data.LoadDocuments(ticketNum);
             documentModel.TicketNumber = ticketNum;

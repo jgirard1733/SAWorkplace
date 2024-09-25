@@ -1,0 +1,123 @@
+﻿@model SAWorkplace.Models.LoadTestDisplayModel
+@using Microsoft.AspNetCore.Http;
+
+<script>
+    function AddLoadTest(ticketNum, CarrierID) {
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("AddLoadTest", "LoadTest")',
+            data: { ticketNum: ticketNum, carrierId: CarrierID },
+            success: function (data) {
+                $('#PreviewAddLoadTest').html(data);
+                $('#myAddLoadTestModal').modal({
+                    closable: false,
+                    transition: 'scale',
+                    allowMultiple: true,
+                    onDeny: function () {
+                        $('#modLoadTestHide').dimmer('hide');
+                        $('#myAddLoadTestModal').modal('hide');
+                    },
+                    onApprove: function (e) {
+                        var validated = $('#frmAddLoadTest').form('validate form');
+                        if (!validated) {
+                            return false;
+                        }
+                        else {
+                            $('#frmAddLoadTest').submit();
+                        }
+                    }
+                }).modal('show');
+                $('#modLoadTestHide').dimmer({ closable: false }).dimmer('show');
+
+            }
+        });
+    }
+
+    function DeleteLoadTest(loadTestId, ticketNum, CarrierID) {
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("DeleteLoadTest", "LoadTest")',
+            data: { LoadTestID: loadTestId, ticketNum: ticketNum, carrierId: CarrierID},
+            success: function (data) {
+                $('#myDeleteLoadTestModal').modal('hide');
+                $('#modLoadTestHide').dimmer('hide');
+                $('#myLoadTestContainer').html(data);
+            }
+        })
+    }
+
+    function decodeHtml(html) {
+        var txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
+    }
+
+    function CloseModals() {
+        $('#myDeleteLoadTestModal').modal('hide');
+        $('#myAddLoadTestModal').modal('hide');
+        $('body').addClass('modal-open');
+    };
+</script>
+
+
+<div class="row" id="loadtests">
+    <div class="form-group col-12">
+        @{
+            string PSArchitect = Context.Session.GetString("PSArchitect");
+            string viewType = Context.Session.GetString("ViewType");
+
+            <label class="col-form-label"><u>Load Test Results</u></label> <a href="#" onclick="AddLoadTest('@Model.TicketNumber', '@Model.CarrierID')"><img src="~/img/indicators/add.png" height="15" width="15" /></a>
+
+            if (Model.LoadTests.Count() > 0)
+            {
+                <table width="100%" border="0" class="ui striped table" style="font-size:11px">
+                    <thead>
+                        <tr>
+                            <th>Interface Name</th>
+                            <th>Burst Min</th>
+                            <th>Burst Max</th>
+                            <th>Burst Avg</th>
+                            <th>Variance Min</th>
+                            <th>Variance Max</th>
+                            <th>Variance Avg</th>
+                            <th>Date/Time Tested</th>
+                            <th>Result</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    @{ foreach (var loadTest in Model.LoadTests)
+                        {
+                            <tr>
+                                <td class="info-text" height="18">@loadTest.InterfaceName</td>
+                                <td class="info-text" height="18">@loadTest.Burst_Min ms</td>
+                                <td class="info-text" height="18">@loadTest.Burst_Max ms</td>
+                                <td class="info-text" height="18">@loadTest.Burst_Avg ms</td>
+                                <td class="info-text" height="18">@loadTest.Variance_Min ms</td>
+                                <td class="info-text" height="18">@loadTest.Variance_Max ms</td>
+                                <td class="info-text" height="18">@loadTest.Variance_Avg ms</td>
+                                <td class="info-text" height="18">@loadTest.DateTested</td>
+                                <td class="info-text" height="18">
+                                    @{
+                                        if (loadTest.TestResult == "Pass")
+                                        {
+                                            @Html.Raw("<font color='green'><b>Pass</b></font>")
+                                        }
+                                        else if (loadTest.TestResult == "Fail")
+                                        {
+                                            @Html.Raw("<font color='Red'><b>Fail</b></font>")
+                                        }
+                                        else
+                                        {
+                                            @Html.Raw(" ")
+                                        }
+                                    }
+                                </td>
+                                <td class="info-text" width="20"><a href="#" onclick="DeleteLoadTestModal('@loadTest.InterfaceName', @loadTest.LoadTestID, '@loadTest.TicketNumber', '@Model.CarrierID')" style="padding:0"><img src="~/img/indicators/delete.png" height="15" width="15" /></a></td>
+
+                            </tr>
+                        }
+                    }
+                </table>
+            } }
+    </div>
+</div>
